@@ -12,10 +12,17 @@ dependencies = [
     "fastapi>=0.141.1",
     "mypy>=2.3.0",
     "passlib[bcrypt]>=1.7.4",
+    "pwdlib[bcrypt]>=0.3.0",
     "pydantic-settings>=2.14.2",
+    "pydantic[email]>=2.13.4",
     "pyjwt>=2.13.0",
     "redis>=8.0.1",
     "ruff>=0.16.0",
     "sqlmodel>=0.0.39",
     "uvicorn[standard]>=0.52.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
 ]
