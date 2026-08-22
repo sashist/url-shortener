@@ -1,129 +1,221 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>URL Shortener</title>
+  <title>Shortener — Minimal URL Shortener</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['Geist Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f4f4f5',
+              900: '#18181b',
+              950: '#09090b',
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    * { -webkit-font-smoothing: antialiased; }
+    ::selection { background: #27272a; color: #fafafa; }
   </style>
 </head>
-<body class="bg-zinc-50 text-zinc-900 min-h-screen">
-  <!-- Header -->
-  <header class="border-b border-zinc-200 bg-white">
-    <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-2 font-semibold text-lg tracking-tight">
-        <span class="text-zinc-900">🔗 ShortURL</span>
+<body class="bg-zinc-950 text-zinc-100 font-sans min-h-screen flex flex-col selection:bg-zinc-800">
+
+  <!-- Navigation -->
+  <nav class="border-b border-zinc-800/80 bg-zinc-950/60 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded bg-zinc-100 flex items-center justify-center text-zinc-950">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+        </div>
+        <span class="text-sm font-semibold tracking-tight text-zinc-200">shortener<span class="text-zinc-500">.dev</span></span>
       </div>
-      <div id="user-nav" class="flex items-center gap-3 text-sm">
-        <span id="user-email" class="text-zinc-500 hidden"></span>
-        <button id="logout-btn" class="hidden text-zinc-600 hover:text-zinc-900 font-medium px-3 py-1 rounded border border-zinc-300 hover:bg-zinc-50 transition">Выйти</button>
+
+      <div id="nav-user" class="flex items-center gap-4 text-xs">
+        <span id="nav-email" class="text-zinc-400 font-mono hidden"></span>
+        <button id="nav-logout" class="hidden text-zinc-400 hover:text-zinc-100 transition py-1 px-2.5 rounded hover:bg-zinc-900 border border-transparent hover:border-zinc-800">
+          Log out
+        </button>
       </div>
     </div>
-  </header>
+  </nav>
 
-  <main class="max-w-4xl mx-auto px-4 py-8">
-    <!-- Auth Section (if not logged in) -->
-    <div id="auth-section" class="max-w-sm mx-auto my-12 bg-white p-6 rounded-lg border border-zinc-200 shadow-sm">
-      <div class="flex border-b border-zinc-200 mb-5">
-        <button id="tab-login" class="flex-1 pb-2 font-medium text-sm border-b-2 border-zinc-900 text-zinc-900">Вход</button>
-        <button id="tab-register" class="flex-1 pb-2 font-medium text-sm text-zinc-400 hover:text-zinc-700">Регистрация</button>
+  <!-- Main Container -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-6 py-12 flex flex-col">
+
+    <!-- Auth View -->
+    <div id="view-auth" class="my-auto max-w-sm w-full mx-auto space-y-6">
+      <div class="space-y-1 text-center">
+        <h1 class="text-xl font-semibold tracking-tight text-zinc-100" id="auth-title">Welcome back</h1>
+        <p class="text-xs text-zinc-400" id="auth-subtitle">Enter your credentials to access your dashboard</p>
       </div>
 
-      <form id="auth-form" class="space-y-4">
-        <div>
-          <label class="block text-xs font-medium text-zinc-700 mb-1">Email</label>
-          <input type="email" id="auth-email" required class="w-full px-3 py-2 border border-zinc-300 rounded text-sm focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900" placeholder="name@example.com">
+      <div class="bg-zinc-900/50 border border-zinc-800/80 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
+        <div class="flex p-1 bg-zinc-950/80 rounded-lg border border-zinc-800/60 mb-5 text-xs">
+          <button id="auth-tab-login" class="flex-1 py-1.5 rounded-md font-medium text-zinc-100 bg-zinc-800 shadow-sm transition">Sign in</button>
+          <button id="auth-tab-register" class="flex-1 py-1.5 rounded-md font-medium text-zinc-400 hover:text-zinc-200 transition">Sign up</button>
         </div>
-        <div>
-          <label class="block text-xs font-medium text-zinc-700 mb-1">Пароль</label>
-          <input type="password" id="auth-password" required minlength="4" class="w-full px-3 py-2 border border-zinc-300 rounded text-sm focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900" placeholder="••••••••">
-        </div>
-        <div id="auth-error" class="text-xs text-red-600 hidden"></div>
-        <button type="submit" id="auth-submit-btn" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-2 rounded text-sm transition">Войти</button>
-      </form>
+
+        <form id="form-auth" class="space-y-4">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-medium text-zinc-300">Email</label>
+            <input type="email" id="input-email" required class="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition" placeholder="name@company.com">
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-medium text-zinc-300">Password</label>
+            <input type="password" id="input-password" required minlength="4" class="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition" placeholder="••••••••">
+          </div>
+
+          <div id="auth-alert" class="text-xs text-red-400 bg-red-950/30 border border-red-900/40 rounded-lg p-2.5 hidden"></div>
+
+          <button type="submit" id="btn-auth-submit" class="w-full bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs py-2.5 rounded-lg transition shadow-sm">
+            Continue with Email
+          </button>
+        </form>
+      </div>
     </div>
 
-    <!-- App Section (if logged in) -->
-    <div id="app-section" class="hidden space-y-8">
-      <!-- Create Link Card -->
-      <div class="bg-white p-6 rounded-lg border border-zinc-200 shadow-sm">
-        <h2 class="text-base font-semibold mb-3">Сократить новую ссылку</h2>
-        <form id="create-link-form" class="flex gap-2">
-          <input type="url" id="original-url-input" required class="flex-1 px-3 py-2 border border-zinc-300 rounded text-sm focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900" placeholder="https://example.com/very/long/url">
-          <button type="submit" class="bg-zinc-900 hover:bg-zinc-800 text-white px-5 py-2 rounded text-sm font-medium transition whitespace-nowrap">Сократить</button>
+    <!-- Dashboard View -->
+    <div id="view-dashboard" class="hidden space-y-10">
+      
+      <!-- Input Section -->
+      <section class="space-y-3">
+        <form id="form-create" class="relative flex items-center">
+          <div class="absolute left-3.5 text-zinc-500 pointer-events-none">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </div>
+          <input 
+            type="url" 
+            id="input-target-url" 
+            required 
+            placeholder="Paste a long URL to shorten..."
+            class="w-full bg-zinc-900/40 border border-zinc-800 rounded-xl pl-10 pr-32 py-3.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition shadow-inner font-mono text-xs"
+          >
+          <button 
+            type="submit" 
+            class="absolute right-2 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-1.5"
+          >
+            Shorten
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
         </form>
 
-        <!-- Result Banner -->
-        <div id="create-result" class="hidden mt-4 p-3 bg-zinc-100 rounded border border-zinc-200 flex items-center justify-between text-sm">
-          <span class="font-medium text-zinc-900" id="result-short-url"></span>
-          <button id="copy-btn" class="px-3 py-1 bg-white hover:bg-zinc-50 border border-zinc-300 rounded text-xs font-medium text-zinc-800 transition">Скопировать</button>
+        <!-- New Link Created Notification -->
+        <div id="created-card" class="hidden bg-zinc-900/80 border border-zinc-700/60 rounded-xl p-3.5 flex items-center justify-between animate-fadeIn">
+          <div class="flex items-center gap-3">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="text-xs text-zinc-400">Ready:</span>
+            <a id="created-link-url" href="#" target="_blank" class="font-mono text-xs text-zinc-100 hover:underline font-medium"></a>
+          </div>
+          <button id="btn-copy-created" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs px-3 py-1.5 rounded-md transition font-medium border border-zinc-700/50 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Copy link</span>
+          </button>
         </div>
-      </div>
+      </section>
 
-      <!-- Links List -->
-      <div class="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-zinc-200 flex justify-between items-center">
-          <h3 class="font-semibold text-sm">Ваши ссылки</h3>
-          <button id="refresh-links-btn" class="text-xs text-zinc-500 hover:text-zinc-900">Обновить</button>
+      <!-- Links List Section -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Active Links</h2>
+            <span id="links-count-badge" class="bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] font-mono px-2 py-0.5 rounded-full">0</span>
+          </div>
+          <button id="btn-refresh" class="text-xs text-zinc-500 hover:text-zinc-300 transition flex items-center gap-1">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Refresh
+          </button>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-zinc-50 text-zinc-500 text-xs border-b border-zinc-200">
-              <tr>
-                <th class="px-6 py-3 font-medium">Короткая ссылка</th>
-                <th class="px-6 py-3 font-medium">Оригинальный URL</th>
-                <th class="px-6 py-3 font-medium">Создана</th>
-                <th class="px-6 py-3 font-medium text-right">Действие</th>
-              </tr>
-            </thead>
-            <tbody id="links-table-body" class="divide-y divide-zinc-100">
-              <tr>
-                <td colspan="4" class="px-6 py-8 text-center text-zinc-400">Загрузка ссылок...</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="border border-zinc-800/80 rounded-xl bg-zinc-900/20 overflow-hidden divide-y divide-zinc-800/60" id="links-list-container">
+          <div class="p-12 text-center text-xs text-zinc-500 font-mono">Loading links...</div>
         </div>
-      </div>
+      </section>
     </div>
   </main>
 
-  <!-- Stats Modal -->
-  <div id="stats-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white max-w-lg w-full rounded-lg border border-zinc-200 shadow-lg p-6 space-y-4">
-      <div class="flex justify-between items-center border-b border-zinc-100 pb-3">
-        <div>
-          <h3 class="font-semibold text-base">Статистика ссылки</h3>
-          <p class="text-xs text-zinc-400" id="modal-short-code"></p>
+  <!-- Analytics Drawer / Modal -->
+  <div id="modal-stats" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg w-full p-6 space-y-6 shadow-2xl animate-scaleIn">
+      <div class="flex items-start justify-between">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-zinc-500 font-mono uppercase">Analytics</span>
+            <span id="modal-badge-code" class="bg-zinc-800 text-zinc-300 font-mono text-[11px] px-2 py-0.5 rounded"></span>
+          </div>
+          <div id="modal-original-target" class="text-xs text-zinc-400 font-mono truncate max-w-sm"></div>
         </div>
-        <button id="close-modal-btn" class="text-zinc-400 hover:text-zinc-700 text-lg leading-none">&times;</button>
+        <button id="btn-close-modal" class="text-zinc-500 hover:text-zinc-200 transition p-1">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
 
+      <!-- Quick Metrics -->
       <div class="grid grid-cols-2 gap-3">
-        <div class="bg-zinc-50 p-3 rounded border border-zinc-200">
-          <div class="text-xs text-zinc-500">Всего кликов</div>
-          <div class="text-2xl font-bold mt-1" id="modal-total-clicks">0</div>
+        <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-lg p-3.5 space-y-1">
+          <div class="text-[11px] font-medium text-zinc-400">Total Clicks</div>
+          <div id="modal-clicks-total" class="text-2xl font-semibold text-zinc-100 font-mono">0</div>
         </div>
-        <div class="bg-zinc-50 p-3 rounded border border-zinc-200">
-          <div class="text-xs text-zinc-500">Браузеры</div>
-          <div class="text-xs text-zinc-700 mt-1 font-medium" id="modal-browsers-summary">-</div>
+        <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-lg p-3.5 space-y-1">
+          <div class="text-[11px] font-medium text-zinc-400">Top Browser</div>
+          <div id="modal-top-browser" class="text-base font-medium text-zinc-200 truncate mt-1">-</div>
         </div>
       </div>
 
+      <!-- Breakdown by Browser -->
       <div class="space-y-2">
-        <h4 class="text-xs font-semibold text-zinc-600 uppercase tracking-wider">История переходов</h4>
-        <div class="max-h-48 overflow-y-auto border border-zinc-200 rounded text-xs">
-          <table class="w-full text-left">
-            <thead class="bg-zinc-50 border-b border-zinc-200 text-zinc-500">
+        <div class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Browsers breakdown</div>
+        <div id="modal-browser-bars" class="space-y-1.5">
+        </div>
+      </div>
+
+      <!-- Click Activity Log -->
+      <div class="space-y-2">
+        <div class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Recent Activity</div>
+        <div class="border border-zinc-800 rounded-lg max-h-48 overflow-y-auto bg-zinc-950/40">
+          <table class="w-full text-left text-[11px] font-mono">
+            <thead class="bg-zinc-900/60 text-zinc-500 border-b border-zinc-800 sticky top-0">
               <tr>
-                <th class="px-3 py-2">Время</th>
-                <th class="px-3 py-2">Браузер</th>
-                <th class="px-3 py-2">Страна</th>
+                <th class="px-3 py-2 font-medium">Time</th>
+                <th class="px-3 py-2 font-medium">Browser</th>
+                <th class="px-3 py-2 font-medium">Country</th>
               </tr>
             </thead>
-            <tbody id="modal-clicks-body" class="divide-y divide-zinc-100">
+            <tbody id="modal-log-body" class="divide-y divide-zinc-800/40 text-zinc-400">
             </tbody>
           </table>
         </div>
@@ -135,40 +227,43 @@
     const API_BASE = "http://localhost:8000";
     let isRegisterMode = false;
 
-    // Elements
-    const authSection = document.getElementById("auth-section");
-    const appSection = document.getElementById("app-section");
-    const userEmail = document.getElementById("user-email");
-    const logoutBtn = document.getElementById("logout-btn");
-    const tabLogin = document.getElementById("tab-login");
-    const tabRegister = document.getElementById("tab-register");
-    const authForm = document.getElementById("auth-form");
-    const authEmail = document.getElementById("auth-email");
-    const authPassword = document.getElementById("auth-password");
-    const authSubmitBtn = document.getElementById("auth-submit-btn");
-    const authError = document.getElementById("auth-error");
+    const viewAuth = document.getElementById("view-auth");
+    const viewDashboard = document.getElementById("view-dashboard");
+    const navEmail = document.getElementById("nav-email");
+    const navLogout = document.getElementById("nav-logout");
 
-    const createLinkForm = document.getElementById("create-link-form");
-    const originalUrlInput = document.getElementById("original-url-input");
-    const createResult = document.getElementById("create-result");
-    const resultShortUrl = document.getElementById("result-short-url");
-    const copyBtn = document.getElementById("copy-btn");
-    const linksTableBody = document.getElementById("links-table-body");
-    const refreshLinksBtn = document.getElementById("refresh-links-btn");
+    const authTitle = document.getElementById("auth-title");
+    const authSubtitle = document.getElementById("auth-subtitle");
+    const authTabLogin = document.getElementById("auth-tab-login");
+    const authTabRegister = document.getElementById("auth-tab-register");
+    const formAuth = document.getElementById("form-auth");
+    const inputEmail = document.getElementById("input-email");
+    const inputPassword = document.getElementById("input-password");
+    const btnAuthSubmit = document.getElementById("btn-auth-submit");
+    const authAlert = document.getElementById("auth-alert");
 
-    const statsModal = document.getElementById("stats-modal");
-    const closeModalBtn = document.getElementById("close-modal-btn");
-    const modalShortCode = document.getElementById("modal-short-code");
-    const modalTotalClicks = document.getElementById("modal-total-clicks");
-    const modalBrowsersSummary = document.getElementById("modal-browsers-summary");
-    const modalClicksBody = document.getElementById("modal-clicks-body");
+    const formCreate = document.getElementById("form-create");
+    const inputTargetUrl = document.getElementById("input-target-url");
+    const createdCard = document.getElementById("created-card");
+    const createdLinkUrl = document.getElementById("created-link-url");
+    const btnCopyCreated = document.getElementById("btn-copy-created");
+    const linksCountBadge = document.getElementById("links-count-badge");
+    const linksListContainer = document.getElementById("links-list-container");
+    const btnRefresh = document.getElementById("btn-refresh");
 
-    // Auth State
+    const modalStats = document.getElementById("modal-stats");
+    const btnCloseModal = document.getElementById("btn-close-modal");
+    const modalBadgeCode = document.getElementById("modal-badge-code");
+    const modalOriginalTarget = document.getElementById("modal-original-target");
+    const modalClicksTotal = document.getElementById("modal-clicks-total");
+    const modalTopBrowser = document.getElementById("modal-top-browser");
+    const modalBrowserBars = document.getElementById("modal-browser-bars");
+    const modalLogBody = document.getElementById("modal-log-body");
+
     function getToken() { return localStorage.getItem("token"); }
     function setToken(token) { localStorage.setItem("token", token); }
-    function clearToken() { localStorage.removeItem("token"); }
+    function removeToken() { localStorage.removeItem("token"); }
 
-    // Init
     async function init() {
       const token = getToken();
       if (!token) {
@@ -181,10 +276,10 @@
         });
         if (res.ok) {
           const user = await res.json();
-          showApp(user.email);
+          showDashboard(user.email);
           loadLinks();
         } else {
-          clearToken();
+          removeToken();
           showAuth();
         }
       } catch (err) {
@@ -193,43 +288,45 @@
     }
 
     function showAuth() {
-      authSection.classList.remove("hidden");
-      appSection.classList.add("hidden");
-      userEmail.classList.add("hidden");
-      logoutBtn.classList.add("hidden");
+      viewAuth.classList.remove("hidden");
+      viewDashboard.classList.add("hidden");
+      navEmail.classList.add("hidden");
+      navLogout.classList.add("hidden");
     }
 
-    function showApp(email) {
-      authSection.classList.add("hidden");
-      appSection.classList.remove("hidden");
-      userEmail.textContent = email;
-      userEmail.classList.remove("hidden");
-      logoutBtn.classList.remove("hidden");
+    function showDashboard(email) {
+      viewAuth.classList.add("hidden");
+      viewDashboard.classList.remove("hidden");
+      navEmail.textContent = email;
+      navEmail.classList.remove("hidden");
+      navLogout.classList.remove("hidden");
     }
 
-    // Tabs
-    tabLogin.addEventListener("click", () => {
+    authTabLogin.addEventListener("click", () => {
       isRegisterMode = false;
-      tabLogin.className = "flex-1 pb-2 font-medium text-sm border-b-2 border-zinc-900 text-zinc-900";
-      tabRegister.className = "flex-1 pb-2 font-medium text-sm text-zinc-400 hover:text-zinc-700";
-      authSubmitBtn.textContent = "Войти";
-      authError.classList.add("hidden");
+      authTabLogin.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-100 bg-zinc-800 shadow-sm transition";
+      authTabRegister.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-400 hover:text-zinc-200 transition";
+      authTitle.textContent = "Welcome back";
+      authSubtitle.textContent = "Enter your credentials to access your dashboard";
+      btnAuthSubmit.textContent = "Sign in";
+      authAlert.classList.add("hidden");
     });
 
-    tabRegister.addEventListener("click", () => {
+    authTabRegister.addEventListener("click", () => {
       isRegisterMode = true;
-      tabRegister.className = "flex-1 pb-2 font-medium text-sm border-b-2 border-zinc-900 text-zinc-900";
-      tabLogin.className = "flex-1 pb-2 font-medium text-sm text-zinc-400 hover:text-zinc-700";
-      authSubmitBtn.textContent = "Зарегистрироваться";
-      authError.classList.add("hidden");
+      authTabRegister.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-100 bg-zinc-800 shadow-sm transition";
+      authTabLogin.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-400 hover:text-zinc-200 transition";
+      authTitle.textContent = "Create an account";
+      authSubtitle.textContent = "Get started with your personal shortener in seconds";
+      btnAuthSubmit.textContent = "Create account";
+      authAlert.classList.add("hidden");
     });
 
-    // Login/Register Submit
-    authForm.addEventListener("submit", async (e) => {
+    formAuth.addEventListener("submit", async (e) => {
       e.preventDefault();
-      authError.classList.add("hidden");
-      const email = authEmail.value.trim();
-      const password = authPassword.value;
+      authAlert.classList.add("hidden");
+      const email = inputEmail.value.trim();
+      const password = inputPassword.value;
 
       try {
         const endpoint = isRegisterMode ? "/api/v1/auth/register" : "/api/v1/auth/login";
@@ -240,14 +337,13 @@
         });
 
         if (!res.ok) {
-          const errData = await res.json();
-          authError.textContent = errData.detail || "Произошла ошибка при авторизации";
-          authError.classList.remove("hidden");
+          const err = await res.json();
+          authAlert.textContent = err.detail || "Authentication failed";
+          authAlert.classList.remove("hidden");
           return;
         }
 
         if (isRegisterMode) {
-          // After register, automatically log in
           const loginRes = await fetch(`${API_BASE}/api/v1/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -262,20 +358,19 @@
 
         init();
       } catch (err) {
-        authError.textContent = "Не удалось подключиться к серверу";
-        authError.classList.remove("hidden");
+        authAlert.textContent = "Failed to connect to backend service";
+        authAlert.classList.remove("hidden");
       }
     });
 
-    logoutBtn.addEventListener("click", () => {
-      clearToken();
+    navLogout.addEventListener("click", () => {
+      removeToken();
       showAuth();
     });
 
-    // Create Link
-    createLinkForm.addEventListener("submit", async (e) => {
+    formCreate.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const originalUrl = originalUrlInput.value.trim();
+      const originalUrl = inputTargetUrl.value.trim();
       const token = getToken();
 
       try {
@@ -290,27 +385,26 @@
 
         if (res.ok) {
           const data = await res.json();
-          const fullShortUrl = `${API_BASE}/${data.short_code}`;
-          resultShortUrl.textContent = fullShortUrl;
-          createResult.classList.remove("hidden");
-          originalUrlInput.value = "";
+          const shortUrl = `${API_BASE}/${data.short_code}`;
+          createdLinkUrl.textContent = shortUrl;
+          createdLinkUrl.href = shortUrl;
+          createdCard.classList.remove("hidden");
+          inputTargetUrl.value = "";
           loadLinks();
         } else {
-          alert("Ошибка при создании ссылки. Проверьте формат URL.");
+          alert("Error: Please provide a valid URL (including https://)");
         }
       } catch (err) {
-        alert("Ошибка подключения к серверу.");
+        alert("Connection error.");
       }
     });
 
-    // Copy Button
-    copyBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(resultShortUrl.textContent);
-      copyBtn.textContent = "Скопировано!";
-      setTimeout(() => { copyBtn.textContent = "Скопировать"; }, 2000);
+    btnCopyCreated.addEventListener("click", () => {
+      navigator.clipboard.writeText(createdLinkUrl.textContent);
+      btnCopyCreated.querySelector("span").textContent = "Copied!";
+      setTimeout(() => { btnCopyCreated.querySelector("span").textContent = "Copy link"; }, 1500);
     });
 
-    // Load Links
     async function loadLinks() {
       const token = getToken();
       try {
@@ -322,49 +416,76 @@
           renderLinks(links);
         }
       } catch (err) {
-        linksTableBody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-red-500">Ошибка загрузки ссылок</td></tr>`;
+        linksListContainer.innerHTML = `<div class="p-8 text-center text-xs text-red-400 font-mono">Failed to load links</div>`;
       }
     }
 
     function renderLinks(links) {
+      linksCountBadge.textContent = links.length;
       if (!links || links.length === 0) {
-        linksTableBody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-zinc-400">У вас пока нет созданных ссылок</td></tr>`;
+        linksListContainer.innerHTML = `
+          <div class="p-12 text-center space-y-1">
+            <div class="text-xs text-zinc-400 font-medium">No links created yet</div>
+            <div class="text-[11px] text-zinc-600">Shorten your first destination above</div>
+          </div>
+        `;
         return;
       }
 
-      linksTableBody.innerHTML = links.map(link => {
-        const shortUrl = `${API_BASE}/${link.short_code}`;
-        const createdDate = link.created_at ? new Date(link.created_at).toLocaleDateString("ru-RU") : "-";
+      linksListContainer.innerHTML = links.map(link => {
+        const fullShortUrl = `${API_BASE}/${link.short_code}`;
+        const dateStr = link.created_at ? new Date(link.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-";
+        
         return `
-          <tr class="hover:bg-zinc-50 transition">
-            <td class="px-6 py-3 font-medium text-zinc-900">
-              <a href="${shortUrl}" target="_blank" class="hover:underline text-blue-600">${shortUrl}</a>
-            </td>
-            <td class="px-6 py-3 text-zinc-500 max-w-xs truncate" title="${link.original_url}">
-              ${link.original_url}
-            </td>
-            <td class="px-6 py-3 text-zinc-400 text-xs">${createdDate}</td>
-            <td class="px-6 py-3 text-right">
-              <button onclick="openStats('${link.short_code}')" class="px-2.5 py-1 bg-white hover:bg-zinc-100 border border-zinc-300 rounded text-xs font-medium text-zinc-700 transition">
-                📊 Статистика
+          <div class="p-4 hover:bg-zinc-900/40 transition flex items-center justify-between gap-4 group">
+            <div class="min-w-0 space-y-1">
+              <div class="flex items-center gap-2.5">
+                <a href="${fullShortUrl}" target="_blank" class="font-mono text-xs font-medium text-zinc-100 hover:text-white hover:underline flex items-center gap-1">
+                  ${fullShortUrl}
+                  <svg class="w-3 h-3 text-zinc-500 group-hover:text-zinc-300 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </a>
+                <span class="text-[10px] text-zinc-600 font-mono">${dateStr}</span>
+              </div>
+              <div class="text-[11px] text-zinc-500 font-mono truncate max-w-lg" title="${link.original_url}">
+                ${link.original_url}
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button onclick="copyToClipboard('${fullShortUrl}', this)" class="text-xs text-zinc-400 hover:text-zinc-100 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 px-2.5 py-1.5 rounded-md transition flex items-center gap-1 font-mono text-[11px]">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>Copy</span>
               </button>
-            </td>
-          </tr>
+              <button onclick="openStatsModal('${link.short_code}', '${encodeURIComponent(link.original_url)}')" class="text-xs text-zinc-400 hover:text-zinc-100 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 px-2.5 py-1.5 rounded-md transition flex items-center gap-1 font-mono text-[11px]">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <span>Stats</span>
+              </button>
+            </div>
+          </div>
         `;
       }).join("");
     }
 
-    refreshLinksBtn.addEventListener("click", loadLinks);
+    window.copyToClipboard = function(text, btn) {
+      navigator.clipboard.writeText(text);
+      const span = btn.querySelector("span");
+      span.textContent = "Copied!";
+      setTimeout(() => { span.textContent = "Copy"; }, 1500);
+    };
 
-    // Open Stats Modal
-    window.openStats = async function(shortCode) {
+    btnRefresh.addEventListener("click", loadLinks);
+
+    window.openStatsModal = async function(shortCode, originalUrlEncoded) {
       const token = getToken();
-      modalShortCode.textContent = `${API_BASE}/${shortCode}`;
-      modalTotalClicks.textContent = "...";
-      modalBrowsersSummary.textContent = "...";
-      modalClicksBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-zinc-400">Загрузка...</td></tr>`;
-      statsModal.classList.remove("hidden");
-      statsModal.classList.add("flex");
+      modalBadgeCode.textContent = shortCode;
+      modalOriginalTarget.textContent = decodeURIComponent(originalUrlEncoded);
+      modalClicksTotal.textContent = "...";
+      modalTopBrowser.textContent = "...";
+      modalBrowserBars.innerHTML = `<div class="text-[11px] text-zinc-500 font-mono">Loading metrics...</div>`;
+      modalLogBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-zinc-500 font-mono">Loading activity...</td></tr>`;
+      
+      modalStats.classList.remove("hidden");
+      modalStats.classList.add("flex");
 
       try {
         const res = await fetch(`${API_BASE}/api/v1/links/${shortCode}/stats`, {
@@ -373,51 +494,71 @@
 
         if (res.ok) {
           const clicks = await res.json();
-          modalTotalClicks.textContent = clicks.length;
+          modalClicksTotal.textContent = clicks.length;
 
-          // Summarize browsers
-          const browserCounts = {};
+          // Aggregates
+          const browserMap = {};
           clicks.forEach(c => {
             const b = c.browser || "Unknown";
-            browserCounts[b] = (browserCounts[b] || 0) + 1;
+            browserMap[b] = (browserMap[b] || 0) + 1;
           });
-          const summary = Object.entries(browserCounts).map(([b, count]) => `${b}: ${count}`).join(", ");
-          modalBrowsersSummary.textContent = summary || "Нет данных";
 
-          // Render clicks table
-          if (clicks.length === 0) {
-            modalClicksBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-zinc-400">Переходов пока не было</td></tr>`;
+          const sortedBrowsers = Object.entries(browserMap).sort((a, b) => b[1] - a[1]);
+          modalTopBrowser.textContent = sortedBrowsers.length > 0 ? `${sortedBrowsers[0][0]} (${sortedBrowsers[0][1]})` : "No visits";
+
+          // Browser bars
+          if (sortedBrowsers.length === 0) {
+            modalBrowserBars.innerHTML = `<div class="text-[11px] text-zinc-600 font-mono">No browser data</div>`;
           } else {
-            modalClicksBody.innerHTML = clicks.map(c => {
-              const time = c.created_at ? new Date(c.created_at).toLocaleString("ru-RU") : "-";
+            modalBrowserBars.innerHTML = sortedBrowsers.map(([name, count]) => {
+              const pct = Math.round((count / clicks.length) * 100);
               return `
-                <tr>
-                  <td class="px-3 py-2 text-zinc-500">${time}</td>
-                  <td class="px-3 py-2 font-medium text-zinc-800">${c.browser || "Unknown"}</td>
-                  <td class="px-3 py-2 text-zinc-600">${c.country || "Local / Dev"}</td>
+                <div class="space-y-1 font-mono text-[11px]">
+                  <div class="flex justify-between text-zinc-400">
+                    <span>${name}</span>
+                    <span>${count} (${pct}%)</span>
+                  </div>
+                  <div class="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-zinc-300 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                  </div>
+                </div>
+              `;
+            }).join("");
+          }
+
+          // Activity logs
+          if (clicks.length === 0) {
+            modalLogBody.innerHTML = `<tr><td colspan="3" class="px-3 py-6 text-center text-zinc-600 font-mono">No clicks recorded yet</td></tr>`;
+          } else {
+            modalLogBody.innerHTML = clicks.map(c => {
+              const time = c.created_at ? new Date(c.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "-";
+              return `
+                <tr class="hover:bg-zinc-900/60 transition">
+                  <td class="px-3 py-2 text-zinc-400">${time}</td>
+                  <td class="px-3 py-2 text-zinc-200 font-medium">${c.browser || "Unknown"}</td>
+                  <td class="px-3 py-2 text-zinc-500">${c.country || "Local / Dev"}</td>
                 </tr>
               `;
             }).join("");
           }
         }
       } catch (err) {
-        modalClicksBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-red-500">Ошибка загрузки</td></tr>`;
+        modalLogBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-red-400 font-mono">Error fetching stats</td></tr>`;
       }
     };
 
-    closeModalBtn.addEventListener("click", () => {
-      statsModal.classList.add("hidden");
-      statsModal.classList.remove("flex");
+    btnCloseModal.addEventListener("click", () => {
+      modalStats.classList.add("hidden");
+      modalStats.classList.remove("flex");
     });
 
-    statsModal.addEventListener("click", (e) => {
-      if (e.target === statsModal) {
-        statsModal.classList.add("hidden");
-        statsModal.classList.remove("flex");
+    modalStats.addEventListener("click", (e) => {
+      if (e.target === modalStats) {
+        modalStats.classList.add("hidden");
+        modalStats.classList.remove("flex");
       }
     });
 
-    // Start
     init();
   </script>
 </body>
