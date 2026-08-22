@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shortener — Minimal URL Shortener</title>
+  <title>Shortener — Fast & Minimalist URL Shortener</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -16,13 +16,6 @@
           fontFamily: {
             sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
             mono: ['Geist Mono', 'monospace'],
-          },
-          colors: {
-            brand: {
-              50: '#f4f4f5',
-              900: '#18181b',
-              950: '#09090b',
-            }
           }
         }
       }
@@ -30,153 +23,179 @@
   </script>
   <style>
     * { -webkit-font-smoothing: antialiased; }
-    ::selection { background: #27272a; color: #fafafa; }
   </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 font-sans min-h-screen flex flex-col selection:bg-zinc-800">
+<body class="bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 font-sans min-h-screen flex flex-col transition-colors duration-150 selection:bg-zinc-200 dark:selection:bg-zinc-800">
 
-  <!-- Navigation -->
-  <nav class="border-b border-zinc-800/80 bg-zinc-950/60 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-6 h-6 rounded bg-zinc-100 flex items-center justify-center text-zinc-950">
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <!-- Brand -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-6 h-6 rounded bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center text-white dark:text-zinc-950">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
           </svg>
         </div>
-        <span class="text-sm font-semibold tracking-tight text-zinc-200">shortener<span class="text-zinc-500">.dev</span></span>
+        <span class="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+          shortener<span class="text-zinc-400 dark:text-zinc-600">.dev</span>
+        </span>
       </div>
 
-      <div id="nav-user" class="flex items-center gap-4 text-xs">
-        <span id="nav-email" class="text-zinc-400 font-mono hidden"></span>
-        <button id="nav-logout" class="hidden text-zinc-400 hover:text-zinc-100 transition py-1 px-2.5 rounded hover:bg-zinc-900 border border-transparent hover:border-zinc-800">
-          Log out
+      <!-- Right Navigation Actions -->
+      <div class="flex items-center gap-3">
+        <!-- Theme Toggle -->
+        <button id="theme-toggle-btn" class="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition" aria-label="Toggle theme">
+          <!-- Sun Icon (for dark mode) -->
+          <svg id="theme-sun-icon" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon Icon (for light mode) -->
+          <svg id="theme-moon-icon" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
         </button>
+
+        <!-- Auth Status Elements -->
+        <div id="nav-user-panel" class="flex items-center gap-3 text-xs">
+          <span id="nav-user-email" class="text-zinc-500 dark:text-zinc-400 font-mono hidden"></span>
+          <button id="nav-logout-btn" class="hidden px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition font-medium">
+            Sign out
+          </button>
+        </div>
       </div>
     </div>
-  </nav>
+  </header>
 
   <!-- Main Container -->
-  <main class="flex-1 max-w-5xl w-full mx-auto px-6 py-12 flex flex-col">
+  <main class="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 flex flex-col">
 
-    <!-- Auth View -->
+    <!-- Auth View (Shown when not authenticated) -->
     <div id="view-auth" class="my-auto max-w-sm w-full mx-auto space-y-6">
-      <div class="space-y-1 text-center">
-        <h1 class="text-xl font-semibold tracking-tight text-zinc-100" id="auth-title">Welcome back</h1>
-        <p class="text-xs text-zinc-400" id="auth-subtitle">Enter your credentials to access your dashboard</p>
+      <div class="text-center space-y-1">
+        <h1 class="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100" id="auth-heading">Sign in</h1>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400" id="auth-subheading">Enter your email to manage your shortened links</p>
       </div>
 
-      <div class="bg-zinc-900/50 border border-zinc-800/80 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
-        <div class="flex p-1 bg-zinc-950/80 rounded-lg border border-zinc-800/60 mb-5 text-xs">
-          <button id="auth-tab-login" class="flex-1 py-1.5 rounded-md font-medium text-zinc-100 bg-zinc-800 shadow-sm transition">Sign in</button>
-          <button id="auth-tab-register" class="flex-1 py-1.5 rounded-md font-medium text-zinc-400 hover:text-zinc-200 transition">Sign up</button>
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+        <!-- Tabs -->
+        <div class="flex p-1 bg-zinc-100 dark:bg-zinc-950 rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 mb-5 text-xs">
+          <button id="tab-login" class="flex-1 py-1.5 rounded-md font-medium text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 shadow-sm transition">Sign in</button>
+          <button id="tab-register" class="flex-1 py-1.5 rounded-md font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition">Register</button>
         </div>
 
         <form id="form-auth" class="space-y-4">
           <div class="space-y-1.5">
-            <label class="block text-xs font-medium text-zinc-300">Email</label>
-            <input type="email" id="input-email" required class="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition" placeholder="name@company.com">
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Email address</label>
+            <input type="email" id="input-email" required class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-400 transition" placeholder="you@example.com">
           </div>
 
           <div class="space-y-1.5">
-            <label class="block text-xs font-medium text-zinc-300">Password</label>
-            <input type="password" id="input-password" required minlength="4" class="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition" placeholder="••••••••">
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Password</label>
+            <input type="password" id="input-password" required minlength="4" class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-400 transition" placeholder="••••••••">
           </div>
 
-          <div id="auth-alert" class="text-xs text-red-400 bg-red-950/30 border border-red-900/40 rounded-lg p-2.5 hidden"></div>
+          <div id="auth-error-box" class="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-lg p-2.5 hidden font-mono"></div>
 
-          <button type="submit" id="btn-auth-submit" class="w-full bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs py-2.5 rounded-lg transition shadow-sm">
-            Continue with Email
+          <button type="submit" id="btn-auth-submit" class="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 font-medium text-xs py-2.5 rounded-lg transition shadow-sm">
+            Sign in
           </button>
         </form>
       </div>
     </div>
 
-    <!-- Dashboard View -->
-    <div id="view-dashboard" class="hidden space-y-10">
+    <!-- Dashboard View (Shown when authenticated) -->
+    <div id="view-dashboard" class="hidden space-y-8">
       
-      <!-- Input Section -->
-      <section class="space-y-3">
-        <form id="form-create" class="relative flex items-center">
-          <div class="absolute left-3.5 text-zinc-500 pointer-events-none">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
+      <!-- Shorten Input Box -->
+      <section class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-5 shadow-sm space-y-3">
+        <form id="form-shorten" class="flex flex-col sm:flex-row gap-2">
+          <div class="relative flex-1">
+            <input 
+              type="url" 
+              id="input-url" 
+              required 
+              placeholder="Paste destination URL (e.g. https://github.com/...)"
+              class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg pl-3 pr-3 py-2 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-400 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-400 transition font-mono"
+            >
           </div>
-          <input 
-            type="url" 
-            id="input-target-url" 
-            required 
-            placeholder="Paste a long URL to shorten..."
-            class="w-full bg-zinc-900/40 border border-zinc-800 rounded-xl pl-10 pr-32 py-3.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition shadow-inner font-mono text-xs"
-          >
           <button 
             type="submit" 
-            class="absolute right-2 bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold px-4 py-2 rounded-lg transition shadow flex items-center gap-1.5"
+            class="bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 font-medium text-xs px-5 py-2.5 rounded-lg transition shrink-0 flex items-center justify-center gap-1.5 shadow-sm"
           >
-            Shorten
-            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <span>Shorten URL</span>
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
           </button>
         </form>
 
-        <!-- New Link Created Notification -->
-        <div id="created-card" class="hidden bg-zinc-900/80 border border-zinc-700/60 rounded-xl p-3.5 flex items-center justify-between animate-fadeIn">
-          <div class="flex items-center gap-3">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span class="text-xs text-zinc-400">Ready:</span>
-            <a id="created-link-url" href="#" target="_blank" class="font-mono text-xs text-zinc-100 hover:underline font-medium"></a>
+        <!-- Banner for Newly Created Link -->
+        <div id="box-new-link" class="hidden p-3 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg flex items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+            <span class="text-zinc-500 dark:text-zinc-400 shrink-0 font-medium">Link ready:</span>
+            <a id="new-link-anchor" href="#" target="_blank" class="font-mono text-zinc-900 dark:text-zinc-100 font-semibold hover:underline truncate"></a>
           </div>
-          <button id="btn-copy-created" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs px-3 py-1.5 rounded-md transition font-medium border border-zinc-700/50 flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button id="btn-copy-new-link" class="px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 font-mono text-[11px] rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-700 transition font-medium shrink-0 flex items-center gap-1">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
-            <span>Copy link</span>
+            <span>Copy</span>
           </button>
         </div>
       </section>
 
       <!-- Links List Section -->
-      <section class="space-y-4">
-        <div class="flex items-center justify-between">
+      <section class="space-y-3">
+        <div class="flex items-center justify-between px-1">
           <div class="flex items-center gap-2">
-            <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-400">Active Links</h2>
-            <span id="links-count-badge" class="bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px] font-mono px-2 py-0.5 rounded-full">0</span>
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Links</h2>
+            <span id="badge-total-links" class="font-mono text-[11px] px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">0</span>
           </div>
-          <button id="btn-refresh" class="text-xs text-zinc-500 hover:text-zinc-300 transition flex items-center gap-1">
+          <button id="btn-refresh-links" class="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition flex items-center gap-1">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 4 23 10 17 10"></polyline>
               <polyline points="1 20 1 14 7 14"></polyline>
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
             </svg>
-            Refresh
+            <span>Refresh</span>
           </button>
         </div>
 
-        <div class="border border-zinc-800/80 rounded-xl bg-zinc-900/20 overflow-hidden divide-y divide-zinc-800/60" id="links-list-container">
-          <div class="p-12 text-center text-xs text-zinc-500 font-mono">Loading links...</div>
+        <!-- Links Container -->
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm divide-y divide-zinc-100 dark:divide-zinc-800" id="container-links-list">
+          <div class="p-10 text-center text-xs text-zinc-400 font-mono">Loading links...</div>
         </div>
       </section>
     </div>
   </main>
 
-  <!-- Analytics Drawer / Modal -->
-  <div id="modal-stats" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg w-full p-6 space-y-6 shadow-2xl animate-scaleIn">
-      <div class="flex items-start justify-between">
-        <div class="space-y-1">
+  <!-- Analytics Drawer Modal -->
+  <div id="modal-analytics" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl max-w-lg w-full p-5 sm:p-6 space-y-5 shadow-xl text-zinc-900 dark:text-zinc-100">
+      
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+        <div class="space-y-0.5">
           <div class="flex items-center gap-2">
-            <span class="text-xs text-zinc-500 font-mono uppercase">Analytics</span>
-            <span id="modal-badge-code" class="bg-zinc-800 text-zinc-300 font-mono text-[11px] px-2 py-0.5 rounded"></span>
+            <span class="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">Analytics</span>
+            <span id="modal-shortcode-badge" class="font-mono text-xs px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded font-medium"></span>
           </div>
-          <div id="modal-original-target" class="text-xs text-zinc-400 font-mono truncate max-w-sm"></div>
+          <div id="modal-target-url-text" class="text-xs text-zinc-500 font-mono truncate max-w-sm"></div>
         </div>
-        <button id="btn-close-modal" class="text-zinc-500 hover:text-zinc-200 transition p-1">
+        <button id="modal-close-btn" class="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition rounded">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -184,38 +203,37 @@
         </button>
       </div>
 
-      <!-- Quick Metrics -->
+      <!-- Quick Metrics Grid -->
       <div class="grid grid-cols-2 gap-3">
-        <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-lg p-3.5 space-y-1">
-          <div class="text-[11px] font-medium text-zinc-400">Total Clicks</div>
-          <div id="modal-clicks-total" class="text-2xl font-semibold text-zinc-100 font-mono">0</div>
+        <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg">
+          <div class="text-[11px] text-zinc-500 font-medium">Total Clicks</div>
+          <div id="metric-total-clicks" class="text-xl font-semibold font-mono mt-0.5">0</div>
         </div>
-        <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-lg p-3.5 space-y-1">
-          <div class="text-[11px] font-medium text-zinc-400">Top Browser</div>
-          <div id="modal-top-browser" class="text-base font-medium text-zinc-200 truncate mt-1">-</div>
-        </div>
-      </div>
-
-      <!-- Breakdown by Browser -->
-      <div class="space-y-2">
-        <div class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Browsers breakdown</div>
-        <div id="modal-browser-bars" class="space-y-1.5">
+        <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg">
+          <div class="text-[11px] text-zinc-500 font-medium">Top Browser</div>
+          <div id="metric-top-browser" class="text-sm font-semibold truncate mt-0.5">-</div>
         </div>
       </div>
 
-      <!-- Click Activity Log -->
+      <!-- Browser Distribution Breakdown -->
       <div class="space-y-2">
-        <div class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Recent Activity</div>
-        <div class="border border-zinc-800 rounded-lg max-h-48 overflow-y-auto bg-zinc-950/40">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Browser Distribution</div>
+        <div id="modal-browser-bars-list" class="space-y-1.5"></div>
+      </div>
+
+      <!-- Click Event Activity Log -->
+      <div class="space-y-2">
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Recent Visits</div>
+        <div class="border border-zinc-200 dark:border-zinc-800 rounded-lg max-h-40 overflow-y-auto bg-zinc-50 dark:bg-zinc-950">
           <table class="w-full text-left text-[11px] font-mono">
-            <thead class="bg-zinc-900/60 text-zinc-500 border-b border-zinc-800 sticky top-0">
+            <thead class="bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border-b border-zinc-200 dark:border-zinc-800 sticky top-0">
               <tr>
-                <th class="px-3 py-2 font-medium">Time</th>
+                <th class="px-3 py-2 font-medium">Timestamp</th>
                 <th class="px-3 py-2 font-medium">Browser</th>
                 <th class="px-3 py-2 font-medium">Country</th>
               </tr>
             </thead>
-            <tbody id="modal-log-body" class="divide-y divide-zinc-800/40 text-zinc-400">
+            <tbody id="modal-activity-log-body" class="divide-y divide-zinc-200/50 dark:divide-zinc-800/50 text-zinc-600 dark:text-zinc-400">
             </tbody>
           </table>
         </div>
@@ -227,43 +245,74 @@
     const API_BASE = "http://localhost:8000";
     let isRegisterMode = false;
 
+    // Theme Management
+    const themeToggleBtn = document.getElementById("theme-toggle-btn");
+    const themeSunIcon = document.getElementById("theme-sun-icon");
+    const themeMoonIcon = document.getElementById("theme-moon-icon");
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add("dark");
+        themeSunIcon.classList.remove("hidden");
+        themeMoonIcon.classList.add("hidden");
+      } else {
+        document.documentElement.classList.remove("dark");
+        themeSunIcon.classList.add("hidden");
+        themeMoonIcon.classList.remove("hidden");
+      }
+    }
+
+    themeToggleBtn.addEventListener("click", () => {
+      const isDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+      themeSunIcon.classList.toggle("hidden", !isDark);
+      themeMoonIcon.classList.toggle("hidden", isDark);
+    });
+
+    initTheme();
+
+    // DOM Elements
     const viewAuth = document.getElementById("view-auth");
     const viewDashboard = document.getElementById("view-dashboard");
-    const navEmail = document.getElementById("nav-email");
-    const navLogout = document.getElementById("nav-logout");
+    const navUserEmail = document.getElementById("nav-user-email");
+    const navLogoutBtn = document.getElementById("nav-logout-btn");
 
-    const authTitle = document.getElementById("auth-title");
-    const authSubtitle = document.getElementById("auth-subtitle");
-    const authTabLogin = document.getElementById("auth-tab-login");
-    const authTabRegister = document.getElementById("auth-tab-register");
+    const authHeading = document.getElementById("auth-heading");
+    const authSubheading = document.getElementById("auth-subheading");
+    const tabLogin = document.getElementById("tab-login");
+    const tabRegister = document.getElementById("tab-register");
     const formAuth = document.getElementById("form-auth");
     const inputEmail = document.getElementById("input-email");
     const inputPassword = document.getElementById("input-password");
     const btnAuthSubmit = document.getElementById("btn-auth-submit");
-    const authAlert = document.getElementById("auth-alert");
+    const authErrorBox = document.getElementById("auth-error-box");
 
-    const formCreate = document.getElementById("form-create");
-    const inputTargetUrl = document.getElementById("input-target-url");
-    const createdCard = document.getElementById("created-card");
-    const createdLinkUrl = document.getElementById("created-link-url");
-    const btnCopyCreated = document.getElementById("btn-copy-created");
-    const linksCountBadge = document.getElementById("links-count-badge");
-    const linksListContainer = document.getElementById("links-list-container");
-    const btnRefresh = document.getElementById("btn-refresh");
+    const formShorten = document.getElementById("form-shorten");
+    const inputUrl = document.getElementById("input-url");
+    const boxNewLink = document.getElementById("box-new-link");
+    const newLinkAnchor = document.getElementById("new-link-anchor");
+    const btnCopyNewLink = document.getElementById("btn-copy-new-link");
+    const badgeTotalLinks = document.getElementById("badge-total-links");
+    const containerLinksList = document.getElementById("container-links-list");
+    const btnRefreshLinks = document.getElementById("btn-refresh-links");
 
-    const modalStats = document.getElementById("modal-stats");
-    const btnCloseModal = document.getElementById("btn-close-modal");
-    const modalBadgeCode = document.getElementById("modal-badge-code");
-    const modalOriginalTarget = document.getElementById("modal-original-target");
-    const modalClicksTotal = document.getElementById("modal-clicks-total");
-    const modalTopBrowser = document.getElementById("modal-top-browser");
-    const modalBrowserBars = document.getElementById("modal-browser-bars");
-    const modalLogBody = document.getElementById("modal-log-body");
+    const modalAnalytics = document.getElementById("modal-analytics");
+    const modalCloseBtn = document.getElementById("modal-close-btn");
+    const modalShortcodeBadge = document.getElementById("modal-shortcode-badge");
+    const modalTargetUrlText = document.getElementById("modal-target-url-text");
+    const metricTotalClicks = document.getElementById("metric-total-clicks");
+    const metricTopBrowser = document.getElementById("metric-top-browser");
+    const modalBrowserBarsList = document.getElementById("modal-browser-bars-list");
+    const modalActivityLogBody = document.getElementById("modal-activity-log-body");
 
+    // Token Utilities
     function getToken() { return localStorage.getItem("token"); }
     function setToken(token) { localStorage.setItem("token", token); }
-    function removeToken() { localStorage.removeItem("token"); }
+    function clearToken() { localStorage.removeItem("token"); }
 
+    // Init & Auth Check
     async function init() {
       const token = getToken();
       if (!token) {
@@ -279,7 +328,7 @@
           showDashboard(user.email);
           loadLinks();
         } else {
-          removeToken();
+          clearToken();
           showAuth();
         }
       } catch (err) {
@@ -290,41 +339,43 @@
     function showAuth() {
       viewAuth.classList.remove("hidden");
       viewDashboard.classList.add("hidden");
-      navEmail.classList.add("hidden");
-      navLogout.classList.add("hidden");
+      navUserEmail.classList.add("hidden");
+      navLogoutBtn.classList.add("hidden");
     }
 
     function showDashboard(email) {
       viewAuth.classList.add("hidden");
       viewDashboard.classList.remove("hidden");
-      navEmail.textContent = email;
-      navEmail.classList.remove("hidden");
-      navLogout.classList.remove("hidden");
+      navUserEmail.textContent = email;
+      navUserEmail.classList.remove("hidden");
+      navLogoutBtn.classList.remove("hidden");
     }
 
-    authTabLogin.addEventListener("click", () => {
+    // Tabs
+    tabLogin.addEventListener("click", () => {
       isRegisterMode = false;
-      authTabLogin.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-100 bg-zinc-800 shadow-sm transition";
-      authTabRegister.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-400 hover:text-zinc-200 transition";
-      authTitle.textContent = "Welcome back";
-      authSubtitle.textContent = "Enter your credentials to access your dashboard";
+      tabLogin.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 shadow-sm transition";
+      tabRegister.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition";
+      authHeading.textContent = "Sign in";
+      authSubheading.textContent = "Enter your email to manage your shortened links";
       btnAuthSubmit.textContent = "Sign in";
-      authAlert.classList.add("hidden");
+      authErrorBox.classList.add("hidden");
     });
 
-    authTabRegister.addEventListener("click", () => {
+    tabRegister.addEventListener("click", () => {
       isRegisterMode = true;
-      authTabRegister.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-100 bg-zinc-800 shadow-sm transition";
-      authTabLogin.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-400 hover:text-zinc-200 transition";
-      authTitle.textContent = "Create an account";
-      authSubtitle.textContent = "Get started with your personal shortener in seconds";
+      tabRegister.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800 shadow-sm transition";
+      tabLogin.className = "flex-1 py-1.5 rounded-md font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition";
+      authHeading.textContent = "Create an account";
+      authSubheading.textContent = "Get started with your personal shortener in seconds";
       btnAuthSubmit.textContent = "Create account";
-      authAlert.classList.add("hidden");
+      authErrorBox.classList.add("hidden");
     });
 
+    // Auth Submit
     formAuth.addEventListener("submit", async (e) => {
       e.preventDefault();
-      authAlert.classList.add("hidden");
+      authErrorBox.classList.add("hidden");
       const email = inputEmail.value.trim();
       const password = inputPassword.value;
 
@@ -338,8 +389,8 @@
 
         if (!res.ok) {
           const err = await res.json();
-          authAlert.textContent = err.detail || "Authentication failed";
-          authAlert.classList.remove("hidden");
+          authErrorBox.textContent = err.detail || "Authentication error";
+          authErrorBox.classList.remove("hidden");
           return;
         }
 
@@ -358,19 +409,20 @@
 
         init();
       } catch (err) {
-        authAlert.textContent = "Failed to connect to backend service";
-        authAlert.classList.remove("hidden");
+        authErrorBox.textContent = "Network error connecting to backend";
+        authErrorBox.classList.remove("hidden");
       }
     });
 
-    navLogout.addEventListener("click", () => {
-      removeToken();
+    navLogoutBtn.addEventListener("click", () => {
+      clearToken();
       showAuth();
     });
 
-    formCreate.addEventListener("submit", async (e) => {
+    // Shorten Form
+    formShorten.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const originalUrl = inputTargetUrl.value.trim();
+      const originalUrl = inputUrl.value.trim();
       const token = getToken();
 
       try {
@@ -386,25 +438,26 @@
         if (res.ok) {
           const data = await res.json();
           const shortUrl = `${API_BASE}/${data.short_code}`;
-          createdLinkUrl.textContent = shortUrl;
-          createdLinkUrl.href = shortUrl;
-          createdCard.classList.remove("hidden");
-          inputTargetUrl.value = "";
+          newLinkAnchor.textContent = shortUrl;
+          newLinkAnchor.href = shortUrl;
+          boxNewLink.classList.remove("hidden");
+          inputUrl.value = "";
           loadLinks();
         } else {
-          alert("Error: Please provide a valid URL (including https://)");
+          alert("Error: Please provide a valid URL format (e.g. https://example.com)");
         }
       } catch (err) {
-        alert("Connection error.");
+        alert("Connection error occurred.");
       }
     });
 
-    btnCopyCreated.addEventListener("click", () => {
-      navigator.clipboard.writeText(createdLinkUrl.textContent);
-      btnCopyCreated.querySelector("span").textContent = "Copied!";
-      setTimeout(() => { btnCopyCreated.querySelector("span").textContent = "Copy link"; }, 1500);
+    btnCopyNewLink.addEventListener("click", () => {
+      navigator.clipboard.writeText(newLinkAnchor.textContent);
+      btnCopyNewLink.querySelector("span").textContent = "Copied!";
+      setTimeout(() => { btnCopyNewLink.querySelector("span").textContent = "Copy"; }, 1500);
     });
 
+    // Load Links
     async function loadLinks() {
       const token = getToken();
       try {
@@ -416,47 +469,47 @@
           renderLinks(links);
         }
       } catch (err) {
-        linksListContainer.innerHTML = `<div class="p-8 text-center text-xs text-red-400 font-mono">Failed to load links</div>`;
+        containerLinksList.innerHTML = `<div class="p-8 text-center text-xs text-red-500 font-mono">Failed to fetch links list</div>`;
       }
     }
 
     function renderLinks(links) {
-      linksCountBadge.textContent = links.length;
+      badgeTotalLinks.textContent = links.length;
       if (!links || links.length === 0) {
-        linksListContainer.innerHTML = `
+        containerLinksList.innerHTML = `
           <div class="p-12 text-center space-y-1">
-            <div class="text-xs text-zinc-400 font-medium">No links created yet</div>
-            <div class="text-[11px] text-zinc-600">Shorten your first destination above</div>
+            <div class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">No links created yet</div>
+            <div class="text-[11px] text-zinc-400 dark:text-zinc-600">Enter a URL above to create your first short link</div>
           </div>
         `;
         return;
       }
 
-      linksListContainer.innerHTML = links.map(link => {
+      containerLinksList.innerHTML = links.map(link => {
         const fullShortUrl = `${API_BASE}/${link.short_code}`;
         const dateStr = link.created_at ? new Date(link.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-";
         
         return `
-          <div class="p-4 hover:bg-zinc-900/40 transition flex items-center justify-between gap-4 group">
+          <div class="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-950/40 transition flex items-center justify-between gap-4">
             <div class="min-w-0 space-y-1">
-              <div class="flex items-center gap-2.5">
-                <a href="${fullShortUrl}" target="_blank" class="font-mono text-xs font-medium text-zinc-100 hover:text-white hover:underline flex items-center gap-1">
+              <div class="flex items-center gap-2">
+                <a href="${fullShortUrl}" target="_blank" class="font-mono text-xs font-semibold text-zinc-900 dark:text-zinc-100 hover:underline flex items-center gap-1">
                   ${fullShortUrl}
-                  <svg class="w-3 h-3 text-zinc-500 group-hover:text-zinc-300 transition" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                  <svg class="w-3 h-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                 </a>
-                <span class="text-[10px] text-zinc-600 font-mono">${dateStr}</span>
+                <span class="text-[10px] text-zinc-400 dark:text-zinc-600 font-mono">${dateStr}</span>
               </div>
-              <div class="text-[11px] text-zinc-500 font-mono truncate max-w-lg" title="${link.original_url}">
+              <div class="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono truncate max-w-md sm:max-w-lg" title="${link.original_url}">
                 ${link.original_url}
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
-              <button onclick="copyToClipboard('${fullShortUrl}', this)" class="text-xs text-zinc-400 hover:text-zinc-100 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 px-2.5 py-1.5 rounded-md transition flex items-center gap-1 font-mono text-[11px]">
+            <div class="flex items-center gap-2 shrink-0">
+              <button onclick="copyToClipboard('${fullShortUrl}', this)" class="text-xs text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 font-mono text-[11px] font-medium">
                 <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 <span>Copy</span>
               </button>
-              <button onclick="openStatsModal('${link.short_code}', '${encodeURIComponent(link.original_url)}')" class="text-xs text-zinc-400 hover:text-zinc-100 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 px-2.5 py-1.5 rounded-md transition flex items-center gap-1 font-mono text-[11px]">
+              <button onclick="openStatsModal('${link.short_code}', '${encodeURIComponent(link.original_url)}')" class="text-xs text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 font-mono text-[11px] font-medium">
                 <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 <span>Stats</span>
               </button>
@@ -473,19 +526,20 @@
       setTimeout(() => { span.textContent = "Copy"; }, 1500);
     };
 
-    btnRefresh.addEventListener("click", loadLinks);
+    btnRefreshLinks.addEventListener("click", loadLinks);
 
+    // Analytics Modal
     window.openStatsModal = async function(shortCode, originalUrlEncoded) {
       const token = getToken();
-      modalBadgeCode.textContent = shortCode;
-      modalOriginalTarget.textContent = decodeURIComponent(originalUrlEncoded);
-      modalClicksTotal.textContent = "...";
-      modalTopBrowser.textContent = "...";
-      modalBrowserBars.innerHTML = `<div class="text-[11px] text-zinc-500 font-mono">Loading metrics...</div>`;
-      modalLogBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-zinc-500 font-mono">Loading activity...</td></tr>`;
+      modalShortcodeBadge.textContent = shortCode;
+      modalTargetUrlText.textContent = decodeURIComponent(originalUrlEncoded);
+      metricTotalClicks.textContent = "...";
+      metricTopBrowser.textContent = "...";
+      modalBrowserBarsList.innerHTML = `<div class="text-[11px] text-zinc-400 font-mono">Loading data...</div>`;
+      modalActivityLogBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-zinc-400 font-mono">Loading activity...</td></tr>`;
       
-      modalStats.classList.remove("hidden");
-      modalStats.classList.add("flex");
+      modalAnalytics.classList.remove("hidden");
+      modalAnalytics.classList.add("flex");
 
       try {
         const res = await fetch(`${API_BASE}/api/v1/links/${shortCode}/stats`, {
@@ -494,7 +548,7 @@
 
         if (res.ok) {
           const clicks = await res.json();
-          modalClicksTotal.textContent = clicks.length;
+          metricTotalClicks.textContent = clicks.length;
 
           // Aggregates
           const browserMap = {};
@@ -504,22 +558,22 @@
           });
 
           const sortedBrowsers = Object.entries(browserMap).sort((a, b) => b[1] - a[1]);
-          modalTopBrowser.textContent = sortedBrowsers.length > 0 ? `${sortedBrowsers[0][0]} (${sortedBrowsers[0][1]})` : "No visits";
+          metricTopBrowser.textContent = sortedBrowsers.length > 0 ? `${sortedBrowsers[0][0]} (${sortedBrowsers[0][1]})` : "No visits";
 
-          // Browser bars
+          // Browser progress bars
           if (sortedBrowsers.length === 0) {
-            modalBrowserBars.innerHTML = `<div class="text-[11px] text-zinc-600 font-mono">No browser data</div>`;
+            modalBrowserBarsList.innerHTML = `<div class="text-[11px] text-zinc-500 font-mono">No browser data</div>`;
           } else {
-            modalBrowserBars.innerHTML = sortedBrowsers.map(([name, count]) => {
+            modalBrowserBarsList.innerHTML = sortedBrowsers.map(([name, count]) => {
               const pct = Math.round((count / clicks.length) * 100);
               return `
                 <div class="space-y-1 font-mono text-[11px]">
-                  <div class="flex justify-between text-zinc-400">
+                  <div class="flex justify-between text-zinc-500 dark:text-zinc-400">
                     <span>${name}</span>
                     <span>${count} (${pct}%)</span>
                   </div>
-                  <div class="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                    <div class="bg-zinc-300 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                  <div class="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-zinc-800 dark:bg-zinc-200 h-1.5 rounded-full" style="width: ${pct}%"></div>
                   </div>
                 </div>
               `;
@@ -528,14 +582,14 @@
 
           // Activity logs
           if (clicks.length === 0) {
-            modalLogBody.innerHTML = `<tr><td colspan="3" class="px-3 py-6 text-center text-zinc-600 font-mono">No clicks recorded yet</td></tr>`;
+            modalActivityLogBody.innerHTML = `<tr><td colspan="3" class="px-3 py-6 text-center text-zinc-500 font-mono">No clicks recorded yet</td></tr>`;
           } else {
-            modalLogBody.innerHTML = clicks.map(c => {
+            modalActivityLogBody.innerHTML = clicks.map(c => {
               const time = c.created_at ? new Date(c.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "-";
               return `
-                <tr class="hover:bg-zinc-900/60 transition">
-                  <td class="px-3 py-2 text-zinc-400">${time}</td>
-                  <td class="px-3 py-2 text-zinc-200 font-medium">${c.browser || "Unknown"}</td>
+                <tr class="hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50 transition">
+                  <td class="px-3 py-2 text-zinc-500 dark:text-zinc-400">${time}</td>
+                  <td class="px-3 py-2 font-medium text-zinc-900 dark:text-zinc-200">${c.browser || "Unknown"}</td>
                   <td class="px-3 py-2 text-zinc-500">${c.country || "Local / Dev"}</td>
                 </tr>
               `;
@@ -543,19 +597,19 @@
           }
         }
       } catch (err) {
-        modalLogBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-red-400 font-mono">Error fetching stats</td></tr>`;
+        modalActivityLogBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-red-500 font-mono">Failed to fetch stats</td></tr>`;
       }
     };
 
-    btnCloseModal.addEventListener("click", () => {
-      modalStats.classList.add("hidden");
-      modalStats.classList.remove("flex");
+    modalCloseBtn.addEventListener("click", () => {
+      modalAnalytics.classList.add("hidden");
+      modalAnalytics.classList.remove("flex");
     });
 
-    modalStats.addEventListener("click", (e) => {
-      if (e.target === modalStats) {
-        modalStats.classList.add("hidden");
-        modalStats.classList.remove("flex");
+    modalAnalytics.addEventListener("click", (e) => {
+      if (e.target === modalAnalytics) {
+        modalAnalytics.classList.add("hidden");
+        modalAnalytics.classList.remove("flex");
       }
     });
 
