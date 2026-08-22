@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
+</head>
+<body class="bg-zinc-50 text-zinc-900 min-h-screen">
+  <!-- Header -->
+  <header class="border-b border-zinc-200 bg-white">
+    <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-2 font-semibold text-lg tracking-tight">
+        <span class="text-zinc-900">🔗 ShortURL</span>
+      </div>
+      <div id="user-nav" class="flex items-center gap-3 text-sm">
+        <span id="user-email" class="text-zinc-500 hidden"></span>
+        <button id="logout-btn" class="hidden text-zinc-600 hover:text-zinc-900 font-medium px-3 py-1 rounded border border-zinc-300 hover:bg-zinc-50 transition">Выйти</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Auth Section (if not logged in) -->
+    <div id="auth-section" class="max-w-sm mx-auto my-12 bg-white p-6 rounded-lg border border-zinc-200 shadow-sm">
+      <div class="flex border-b border-zinc-200 mb-5">
+        <button id="tab-login" class="flex-1 pb-2 font-medium text-sm border-b-2 border-zinc-900 text-zinc-900">Вход</button>
+        <button id="tab-register" class="flex-1 pb-2 font-medium text-sm text-zinc-400 hover:text-zinc-700">Регистрация</button>
+      </div>
+
+      <form id="auth-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-zinc-700 mb-1">Email</label>
+          <input type="email" id="auth-email" required class="w-full px-3 py-2 border border-zinc-300 rounded text-sm focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900" placeholder="name@example.com">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-zinc-700 mb-1">Пароль</label>
+          <input type="password" id="auth-password" required minlength="4" class="w-full px-3 py-2 border border-zinc-300 rounded text-sm focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900" placeholder="••••••••">
+        </div>
+        <div id="auth-error" class="text-xs text-red-600 hidden"></div>
+        <button type="submit" id="auth-submit-btn" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-2 rounded text-sm transition">Войти</button>
+      </form>
+    </div>
+
+    <!-- App Section (if logged in) -->
+    <div id="app-section" class="hidden space-y-8">
+      <!-- Create Link Card -->
+      <div class="bg-white p-6 rounded-lg border border-zinc-200 shadow-sm">
+        <h2 class="text-base font-semibold mb-3">Сократить новую ссылку</h2>
+        <form id="create-link-form" class="flex gap-2">
+          <input type="url" id="original-url-input" required class="flex-1 px-3 py-2 border border-zinc-300 rounded text-sm focus:outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900" placeholder="https://example.com/very/long/url">
+          <button type="submit" class="bg-zinc-900 hover:bg-zinc-800 text-white px-5 py-2 rounded text-sm font-medium transition whitespace-nowrap">Сократить</button>
+        </form>
+
+        <!-- Result Banner -->
+        <div id="create-result" class="hidden mt-4 p-3 bg-zinc-100 rounded border border-zinc-200 flex items-center justify-between text-sm">
+          <span class="font-medium text-zinc-900" id="result-short-url"></span>
+          <button id="copy-btn" class="px-3 py-1 bg-white hover:bg-zinc-50 border border-zinc-300 rounded text-xs font-medium text-zinc-800 transition">Скопировать</button>
+        </div>
+      </div>
+
+      <!-- Links List -->
+      <div class="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-zinc-200 flex justify-between items-center">
+          <h3 class="font-semibold text-sm">Ваши ссылки</h3>
+          <button id="refresh-links-btn" class="text-xs text-zinc-500 hover:text-zinc-900">Обновить</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-zinc-50 text-zinc-500 text-xs border-b border-zinc-200">
+              <tr>
+                <th class="px-6 py-3 font-medium">Короткая ссылка</th>
+                <th class="px-6 py-3 font-medium">Оригинальный URL</th>
+                <th class="px-6 py-3 font-medium">Создана</th>
+                <th class="px-6 py-3 font-medium text-right">Действие</th>
+              </tr>
+            </thead>
+            <tbody id="links-table-body" class="divide-y divide-zinc-100">
+              <tr>
+                <td colspan="4" class="px-6 py-8 text-center text-zinc-400">Загрузка ссылок...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Stats Modal -->
+  <div id="stats-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white max-w-lg w-full rounded-lg border border-zinc-200 shadow-lg p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-zinc-100 pb-3">
+        <div>
+          <h3 class="font-semibold text-base">Статистика ссылки</h3>
+          <p class="text-xs text-zinc-400" id="modal-short-code"></p>
+        </div>
+        <button id="close-modal-btn" class="text-zinc-400 hover:text-zinc-700 text-lg leading-none">&times;</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-zinc-50 p-3 rounded border border-zinc-200">
+          <div class="text-xs text-zinc-500">Всего кликов</div>
+          <div class="text-2xl font-bold mt-1" id="modal-total-clicks">0</div>
+        </div>
+        <div class="bg-zinc-50 p-3 rounded border border-zinc-200">
+          <div class="text-xs text-zinc-500">Браузеры</div>
+          <div class="text-xs text-zinc-700 mt-1 font-medium" id="modal-browsers-summary">-</div>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-semibold text-zinc-600 uppercase tracking-wider">История переходов</h4>
+        <div class="max-h-48 overflow-y-auto border border-zinc-200 rounded text-xs">
+          <table class="w-full text-left">
+            <thead class="bg-zinc-50 border-b border-zinc-200 text-zinc-500">
+              <tr>
+                <th class="px-3 py-2">Время</th>
+                <th class="px-3 py-2">Браузер</th>
+                <th class="px-3 py-2">Страна</th>
+              </tr>
+            </thead>
+            <tbody id="modal-clicks-body" class="divide-y divide-zinc-100">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:8000";
+    let isRegisterMode = false;
+
+    // Elements
+    const authSection = document.getElementById("auth-section");
+    const appSection = document.getElementById("app-section");
+    const userEmail = document.getElementById("user-email");
+    const logoutBtn = document.getElementById("logout-btn");
+    const tabLogin = document.getElementById("tab-login");
+    const tabRegister = document.getElementById("tab-register");
+    const authForm = document.getElementById("auth-form");
+    const authEmail = document.getElementById("auth-email");
+    const authPassword = document.getElementById("auth-password");
+    const authSubmitBtn = document.getElementById("auth-submit-btn");
+    const authError = document.getElementById("auth-error");
+
+    const createLinkForm = document.getElementById("create-link-form");
+    const originalUrlInput = document.getElementById("original-url-input");
+    const createResult = document.getElementById("create-result");
+    const resultShortUrl = document.getElementById("result-short-url");
+    const copyBtn = document.getElementById("copy-btn");
+    const linksTableBody = document.getElementById("links-table-body");
+    const refreshLinksBtn = document.getElementById("refresh-links-btn");
+
+    const statsModal = document.getElementById("stats-modal");
+    const closeModalBtn = document.getElementById("close-modal-btn");
+    const modalShortCode = document.getElementById("modal-short-code");
+    const modalTotalClicks = document.getElementById("modal-total-clicks");
+    const modalBrowsersSummary = document.getElementById("modal-browsers-summary");
+    const modalClicksBody = document.getElementById("modal-clicks-body");
+
+    // Auth State
+    function getToken() { return localStorage.getItem("token"); }
+    function setToken(token) { localStorage.setItem("token", token); }
+    function clearToken() { localStorage.removeItem("token"); }
+
+    // Init
+    async function init() {
+      const token = getToken();
+      if (!token) {
+        showAuth();
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const user = await res.json();
+          showApp(user.email);
+          loadLinks();
+        } else {
+          clearToken();
+          showAuth();
+        }
+      } catch (err) {
+        showAuth();
+      }
+    }
+
+    function showAuth() {
+      authSection.classList.remove("hidden");
+      appSection.classList.add("hidden");
+      userEmail.classList.add("hidden");
+      logoutBtn.classList.add("hidden");
+    }
+
+    function showApp(email) {
+      authSection.classList.add("hidden");
+      appSection.classList.remove("hidden");
+      userEmail.textContent = email;
+      userEmail.classList.remove("hidden");
+      logoutBtn.classList.remove("hidden");
+    }
+
+    // Tabs
+    tabLogin.addEventListener("click", () => {
+      isRegisterMode = false;
+      tabLogin.className = "flex-1 pb-2 font-medium text-sm border-b-2 border-zinc-900 text-zinc-900";
+      tabRegister.className = "flex-1 pb-2 font-medium text-sm text-zinc-400 hover:text-zinc-700";
+      authSubmitBtn.textContent = "Войти";
+      authError.classList.add("hidden");
+    });
+
+    tabRegister.addEventListener("click", () => {
+      isRegisterMode = true;
+      tabRegister.className = "flex-1 pb-2 font-medium text-sm border-b-2 border-zinc-900 text-zinc-900";
+      tabLogin.className = "flex-1 pb-2 font-medium text-sm text-zinc-400 hover:text-zinc-700";
+      authSubmitBtn.textContent = "Зарегистрироваться";
+      authError.classList.add("hidden");
+    });
+
+    // Login/Register Submit
+    authForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      authError.classList.add("hidden");
+      const email = authEmail.value.trim();
+      const password = authPassword.value;
+
+      try {
+        const endpoint = isRegisterMode ? "/api/v1/auth/register" : "/api/v1/auth/login";
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          authError.textContent = errData.detail || "Произошла ошибка при авторизации";
+          authError.classList.remove("hidden");
+          return;
+        }
+
+        if (isRegisterMode) {
+          // After register, automatically log in
+          const loginRes = await fetch(`${API_BASE}/api/v1/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+          const loginData = await loginRes.json();
+          setToken(loginData.access_token);
+        } else {
+          const data = await res.json();
+          setToken(data.access_token);
+        }
+
+        init();
+      } catch (err) {
+        authError.textContent = "Не удалось подключиться к серверу";
+        authError.classList.remove("hidden");
+      }
+    });
+
+    logoutBtn.addEventListener("click", () => {
+      clearToken();
+      showAuth();
+    });
+
+    // Create Link
+    createLinkForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const originalUrl = originalUrlInput.value.trim();
+      const token = getToken();
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/links/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ original_url: originalUrl })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const fullShortUrl = `${API_BASE}/${data.short_code}`;
+          resultShortUrl.textContent = fullShortUrl;
+          createResult.classList.remove("hidden");
+          originalUrlInput.value = "";
+          loadLinks();
+        } else {
+          alert("Ошибка при создании ссылки. Проверьте формат URL.");
+        }
+      } catch (err) {
+        alert("Ошибка подключения к серверу.");
+      }
+    });
+
+    // Copy Button
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(resultShortUrl.textContent);
+      copyBtn.textContent = "Скопировано!";
+      setTimeout(() => { copyBtn.textContent = "Скопировать"; }, 2000);
+    });
+
+    // Load Links
+    async function loadLinks() {
+      const token = getToken();
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/links/`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const links = await res.json();
+          renderLinks(links);
+        }
+      } catch (err) {
+        linksTableBody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-red-500">Ошибка загрузки ссылок</td></tr>`;
+      }
+    }
+
+    function renderLinks(links) {
+      if (!links || links.length === 0) {
+        linksTableBody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-zinc-400">У вас пока нет созданных ссылок</td></tr>`;
+        return;
+      }
+
+      linksTableBody.innerHTML = links.map(link => {
+        const shortUrl = `${API_BASE}/${link.short_code}`;
+        const createdDate = link.created_at ? new Date(link.created_at).toLocaleDateString("ru-RU") : "-";
+        return `
+          <tr class="hover:bg-zinc-50 transition">
+            <td class="px-6 py-3 font-medium text-zinc-900">
+              <a href="${shortUrl}" target="_blank" class="hover:underline text-blue-600">${shortUrl}</a>
+            </td>
+            <td class="px-6 py-3 text-zinc-500 max-w-xs truncate" title="${link.original_url}">
+              ${link.original_url}
+            </td>
+            <td class="px-6 py-3 text-zinc-400 text-xs">${createdDate}</td>
+            <td class="px-6 py-3 text-right">
+              <button onclick="openStats('${link.short_code}')" class="px-2.5 py-1 bg-white hover:bg-zinc-100 border border-zinc-300 rounded text-xs font-medium text-zinc-700 transition">
+                📊 Статистика
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    refreshLinksBtn.addEventListener("click", loadLinks);
+
+    // Open Stats Modal
+    window.openStats = async function(shortCode) {
+      const token = getToken();
+      modalShortCode.textContent = `${API_BASE}/${shortCode}`;
+      modalTotalClicks.textContent = "...";
+      modalBrowsersSummary.textContent = "...";
+      modalClicksBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-zinc-400">Загрузка...</td></tr>`;
+      statsModal.classList.remove("hidden");
+      statsModal.classList.add("flex");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/links/${shortCode}/stats`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          const clicks = await res.json();
+          modalTotalClicks.textContent = clicks.length;
+
+          // Summarize browsers
+          const browserCounts = {};
+          clicks.forEach(c => {
+            const b = c.browser || "Unknown";
+            browserCounts[b] = (browserCounts[b] || 0) + 1;
+          });
+          const summary = Object.entries(browserCounts).map(([b, count]) => `${b}: ${count}`).join(", ");
+          modalBrowsersSummary.textContent = summary || "Нет данных";
+
+          // Render clicks table
+          if (clicks.length === 0) {
+            modalClicksBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-zinc-400">Переходов пока не было</td></tr>`;
+          } else {
+            modalClicksBody.innerHTML = clicks.map(c => {
+              const time = c.created_at ? new Date(c.created_at).toLocaleString("ru-RU") : "-";
+              return `
+                <tr>
+                  <td class="px-3 py-2 text-zinc-500">${time}</td>
+                  <td class="px-3 py-2 font-medium text-zinc-800">${c.browser || "Unknown"}</td>
+                  <td class="px-3 py-2 text-zinc-600">${c.country || "Local / Dev"}</td>
+                </tr>
+              `;
+            }).join("");
+          }
+        }
+      } catch (err) {
+        modalClicksBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-red-500">Ошибка загрузки</td></tr>`;
+      }
+    };
+
+    closeModalBtn.addEventListener("click", () => {
+      statsModal.classList.add("hidden");
+      statsModal.classList.remove("flex");
+    });
+
+    statsModal.addEventListener("click", (e) => {
+      if (e.target === statsModal) {
+        statsModal.classList.add("hidden");
+        statsModal.classList.remove("flex");
+      }
+    });
+
+    // Start
+    init();
+  </script>
+</body>
+</html>

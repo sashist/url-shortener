@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import PostgresDsn
+from pydantic import AmqpDsn, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,11 +15,16 @@ class Settings(BaseSettings):
     DATABASE_USERNAME: str
     DATABASE_PASSWORD: str
 
+    REDIS_HOST: str
+    REDIS_PORT: int
+
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
 
+    RABBITMQ_HOST: str
+    RABBITMQ_PORT: int
     RABBITMQ_USERNAME: str
     RABBITMQ_PASSWORD: str
 
@@ -34,4 +39,15 @@ class Settings(BaseSettings):
             path=self.DATABASE_NAME,
         )
 
-settings = Settings() #type: ignore
+    @property
+    def RABBITMQ_URL(self) -> AmqpDsn:
+        return AmqpDsn.build(
+            scheme="amqp",
+            username=self.RABBITMQ_USERNAME,
+            password=self.RABBITMQ_PASSWORD,
+            host=self.RABBITMQ_HOST,
+            port=self.RABBITMQ_PORT,
+        )
+
+
+settings = Settings()  # type: ignore

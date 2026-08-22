@@ -10,12 +10,49 @@ services:
     environment:
       DATABASE_SERVER: postgres
       DATABASE_PORT: 5432
+      RABBITMQ_HOST: rabbitmq_shortener
+      RABBITMQ_PORT: 5672
+      REDIS_HOST: redis_shortener
+      REDIS_PORT: 6379
     volumes:
       - ./backend/src:/app/backend/src
       - ./backend/migrations:/app/backend/migrations
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: python src/brokers/consumer.py
+    env_file:
+      - .env
+    environment:
+      DATABASE_SERVER: postgres
+      DATABASE_PORT: 5432
+      RABBITMQ_HOST: rabbitmq_shortener
+      RABBITMQ_PORT: 5672
+      REDIS_HOST: redis_shortener
+      REDIS_PORT: 6379
+    volumes:
+      - ./backend/src:/app/backend/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  frontend:
+    image: nginx:alpine
+    container_name: frontend_shortener
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+
 
   postgres:
     image: postgres:16-alpine
@@ -35,7 +72,18 @@ services:
       interval: 3s
       timeout: 3s
       retries: 5
-
+  redis:
+    image: redis:latest
+    container_name: redis_shortener
+    env_file:
+      - .env
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
   rabbitmq:
     image: rabbitmq:management
     container_name: rabbitmq_shortener
@@ -50,7 +98,13 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
       RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit disk_free_limit 1431655766
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
   rabbitmq_data:
+  redis_data:

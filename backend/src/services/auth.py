@@ -5,10 +5,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.core.security import (
     create_access_token,
     create_refresh_token,
+    decode_token,
     hash_password,
     verify_password,
 )
-from src.db.users import User, UserCreate
+from src.models.users import User, UserCreate
 from src.repositories.users import UserRepository
 
 
@@ -30,9 +31,9 @@ class AuthService:
         await self.session.commit()
         return user
 
-    async def login_user(self, mail: EmailStr, password: str) -> str:
-        user = await self.repo.get_user_with_hash_password(email=mail)
-        if not user or not verify_password(password, user.hashed_password):
+    async def login_user(self, data: UserCreate) -> tuple[str, str]:
+        user = await self.repo.get_user_with_hash_password(email=data.email)
+        if not user or not verify_password(data.password, user.hashed_password):
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         access_token = create_access_token(data={"sub": str(user.id)})
@@ -44,3 +45,28 @@ class AuthService:
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         return user
+
+    async def refresh_tokens(self, refresh_token: str) -> tuple[str, str]:
+        if not refresh_token:
+            raise HTTPException(status_code=401, detail="Refresh token missing")
+
+        try:
+            payload = decode_token(refresh_token)
+            if payload.get("type") != "refresh":
+                raise HTTPException(status_code=401, detail="Invalid token type")
+            user_id = payload.get("sub")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="Invalid token payload")
+        except ValueError:
+            raise HTTPException(
+                status_code=401, detail="Invalid or expired refresh token"
+            )
+
+        user = await self.repo.get_one(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        new_access_token = create_access_token(data={"sub": str(user.id)})
+        new_refresh_token = create_refresh_token(data={"sub": str(user.id)})
+
+        return new_access_token, new_refresh_token

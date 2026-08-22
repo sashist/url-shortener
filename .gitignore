@@ -1,20 +1,27 @@
-# Python-generated files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[oc]
 build/
 dist/
 wheels/
-*.egg-info
-.idea
-# Virtual environments
-.venv
+*.egg-info/
 
-# Environment secrets
+# IDE & Editor
+.idea/
+.vscode/
+
+# Testing & Linting caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environments
+.venv/
 .env
-
-# Tool & AI assistant internal directories
-.gemini/
-.claude/
-.cursor/
+.env.*
+!.env.example
 *.log
+
+
 

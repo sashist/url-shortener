@@ -1,7 +1,7 @@
 from pydantic import EmailStr
 from sqlmodel import select
 
-from src.db.users import User
+from src.models.users import User
 from src.repositories.base import BaseRepository
 
 

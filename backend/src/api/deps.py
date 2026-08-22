@@ -1,17 +1,19 @@
+import uuid
 from collections.abc import AsyncGenerator, Callable
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.services.links import LinkService
 from src.core.database import async_session_maker
 from src.core.security import decode_token
-from src.db.auth import TokenPayload
+from src.models.auth import TokenPayload
 from src.services.auth import AuthService
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+http_bearer = HTTPBearer()
 
 
 async def get_db() -> AsyncGenerator[AsyncSession]:
@@ -29,7 +31,10 @@ def get_service[T](service_cls: type[T]) -> Callable[[SessionDep], T]:
     return _factory
 
 
-def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
+def get_current_user_id(
+    credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
+) -> uuid.UUID:
+    token = credentials.credentials
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -37,11 +42,12 @@ def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
     )
     try:
         payload = decode_token(token)
+        if payload.get("type") != "access":
+            raise credentials_exception
         sub = payload.get("sub")
         if not sub:
             raise credentials_exception
         token_payload = TokenPayload(sub=sub)
-
     except (InvalidTokenError, ValueError):
         raise credentials_exception
 
@@ -49,4 +55,5 @@ def get_current_user_id(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
 
 
 AuthServiceDep = Annotated[AuthService, Depends(get_service(AuthService))]
-UserIdDep = Annotated[str, Depends(get_current_user_id)]
+LinkServiceDep = Annotated[LinkService, Depends(get_service(LinkService))]
+UserIdDep = Annotated[uuid.UUID, Depends(get_current_user_id)]

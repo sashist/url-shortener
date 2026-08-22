@@ -8,8 +8,7 @@ from src.utils import get_datetime_utc
 
 
 class ClickLogBase(SQLModel):
-    link_id: uuid.UUID = Field(default_factory=uuid.uuid4)
-    ip_address: str | None = None
+    link_id: int | None
     country: str | None = None
     browser: str | None = None
 

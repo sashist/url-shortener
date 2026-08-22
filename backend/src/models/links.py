@@ -1,33 +1,34 @@
 import uuid
 from datetime import datetime
 
-from sqlmodel import DateTime, Field, SQLModel
+from pydantic import HttpUrl
+from sqlmodel import AutoString, DateTime, Field, SQLModel
 
 from src.utils import get_datetime_utc
 
 
 class LinkBase(SQLModel):
     original_url: str
+    is_active: bool = Field(default=True)
 
 
-class LinkCreate(LinkBase):
-    pass
+class LinkCreate(SQLModel):
+    original_url: HttpUrl
 
 
 class LinkPublic(LinkBase):
-    id: uuid.UUID
+    id: int
     short_code: str
-    is_active: bool
 
 
 class LinkUpdate(SQLModel):
-    original_url: str | None = None
+    original_url: HttpUrl | None = None
     is_active: bool | None = None
 
 
 class Link(LinkBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    short_code: str = Field(index=True, unique=True, max_length=10)
+    id: int | None = Field(default=None, primary_key=True)
+    short_code: str | None = Field(index=True, unique=True, max_length=10, default=None)
     is_active: bool = Field(default=True)
     user_id: uuid.UUID | None = Field(
         foreign_key="user.id", default=None, nullable=True

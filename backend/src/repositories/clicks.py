@@ -1,5 +1,5 @@
-from db import ClickLog
-from repositories.base import BaseRepository
+from src.models.clicks import ClickLog
+from src.repositories.base import BaseRepository
 
 
 class ClickRepository(BaseRepository[ClickLog]):

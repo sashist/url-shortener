@@ -1,9 +1,8 @@
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, Request, Response, status
 
 from src.api.deps import AuthServiceDep, UserIdDep
-from src.core.security import create_access_token, create_refresh_token, decode_token
-from src.db.auth import Token
-from src.db.users import UserCreate, UserPublic
+from src.models.auth import Token
+from src.models.users import UserCreate, UserPublic
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -16,49 +15,58 @@ async def register(service: AuthServiceDep, data: UserCreate) -> UserPublic:
     return user
 
 
-@router.post("/login")
-async def login(service: AuthServiceDep, response: Response, data: UserCreate) -> Token:
-    access_token, refresh_token = await service.login_user(data.email, data.password)
+@router.post("/login", response_model=Token, status_code=status.HTTP_200_OK)
+async def login(
+    service: AuthServiceDep,
+    data: UserCreate,
+    response: Response,
+) -> Token:
+    access_token, refresh_token = await service.login_user(data)
+
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        samesite="strict",
-        secure=True,
+        samesite="lax",
+        secure=False,
+        path="/",
     )
     return Token(access_token=access_token, token_type="bearer")
 
-async def logout(response: Response):
-    response.delete_cookie(key="refresh_token", httponly=True, samesite="strict", secure=True)
-    return {"message": "Logged out successfully"}
 
 @router.post("/refresh", response_model=Token)
-async def refresh(request: Request, response: Response):
+async def refresh(
+    request: Request,
+    response: Response,
+    service: AuthServiceDep,
+) -> Token:
     refresh_token = request.cookies.get("refresh_token")
-    if not refresh_token:
-        raise HTTPException(status_code=401, detail="Refresh token missing")
-
-    try:
-        payload = decode_token(refresh_token)
-        if payload.get("type") != "refresh":
-            raise HTTPException(status_code=401, detail="Invalid token type")
-    except ValueError:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
-
-    new_access = create_access_token(data={"sub": payload["sub"]})
-    new_refresh = create_refresh_token(data={"sub": payload["sub"]})
+    new_access, new_refresh = await service.refresh_tokens(refresh_token)
 
     response.set_cookie(
         key="refresh_token",
         value=new_refresh,
         httponly=True,
-        secure=True,
         samesite="lax",
+        secure=False,
+        path="/",
     )
     return Token(access_token=new_access, token_type="bearer")
 
 
+@router.post("/logout")
+async def logout(response: Response) -> dict[str, str]:
+    response.delete_cookie(
+        key="refresh_token",
+        httponly=True,
+        samesite="lax",
+        secure=False,
+        path="/",
+    )
+    return {"message": "Logged out successfully"}
+
+
 @router.get("/me", response_model=UserPublic)
 async def get_me(user_id: UserIdDep, service: AuthServiceDep) -> UserPublic:
-    user = await service.get_user_by_id(user_id)
+    user = await service.get_user_by_id(str(user_id))
     return user
