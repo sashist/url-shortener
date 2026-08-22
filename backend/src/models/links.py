@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import HttpUrl
+from pydantic import HttpUrl, field_validator
 from sqlmodel import AutoString, DateTime, Field, SQLModel
 
 from src.utils import get_datetime_utc
@@ -14,6 +14,16 @@ class LinkBase(SQLModel):
 
 class LinkCreate(SQLModel):
     original_url: HttpUrl
+
+    @field_validator("original_url", mode="before")
+    @classmethod
+    def ensure_scheme(cls, v: str | HttpUrl) -> str | HttpUrl:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v.startswith(("http://", "https://")):
+                return f"https://{v}"
+        return v
+
 
 
 class LinkPublic(LinkBase):

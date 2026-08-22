@@ -10,9 +10,17 @@ async def test_create_link(authenticated_ac: AsyncClient):
     assert "short_code" in response.json()
 
 
+async def test_create_link_without_scheme(authenticated_ac: AsyncClient):
+    response = await authenticated_ac.post(
+        "/api/v1/links/", json={"original_url": "chat.deepseek.com"}
+    )
+    assert response.status_code == 201
+    assert response.json()["original_url"] == "https://chat.deepseek.com/"
+
+
 async def test_create_link_invalid_url(authenticated_ac: AsyncClient):
     response = await authenticated_ac.post(
-        "/api/v1/links/", json={"original_url": "invalid-url-string"}
+        "/api/v1/links/", json={"original_url": "invalid url with spaces"}
     )
     assert response.status_code == 422
 
