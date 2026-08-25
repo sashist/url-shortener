@@ -4,7 +4,8 @@ from fastapi.routing import APIRouter
 
 from src.api.deps import LinkServiceDep, UserIdDep
 from src.init import rabbit_manager
-from src.models import ClickLogPublic, LinkCreate, LinkPublic
+from src.models import ClickLogPublic, LinkCreate, LinkPublic, LinkUpdate
+
 
 router = APIRouter(
     prefix="/links",
@@ -36,6 +37,16 @@ async def get_link_stats(
     short_code: str, user_id: UserIdDep, link_service: LinkServiceDep
 ) -> list[ClickLogPublic]:
     return await link_service.get_link_stats(short_code, user_id)
+
+
+@router.patch("/{short_code}", response_model=LinkPublic, tags=["links"])
+async def update_link(
+    short_code: str,
+    link_update: LinkUpdate,
+    user_id: UserIdDep,
+    link_service: LinkServiceDep,
+) -> LinkPublic:
+    return await link_service.update_link(short_code, link_update, user_id)
 
 
 @redirect_router.get("/{short_code}")

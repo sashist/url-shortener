@@ -3,7 +3,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.shortener import generate_short_code
 from src.init import redis_manager
-from src.models import Link, LinkCreate
+from src.models import Link, LinkCreate, LinkUpdate
 from src.repositories.clicks import ClickRepository
 from src.repositories.links import LinkRepository
 
@@ -24,6 +24,27 @@ class LinkService:
         await self.session.commit()
         await self.session.refresh(_link_data)
         return _link_data
+
+    async def update_link(
+        self, short_code: str, link_update: LinkUpdate, user_id: int
+    ) -> Link:
+        link = await self.repo.get_by_short_code(short_code)
+        if not link or str(link.user_id) != str(user_id):
+            raise HTTPException(status_code=404, detail="Link not found")
+
+        update_dict = link_update.model_dump(exclude_unset=True)
+        if "original_url" in update_dict and update_dict["original_url"] is not None:
+            update_dict["original_url"] = str(update_dict["original_url"])
+
+        link.sqlmodel_update(update_dict)
+        await self.session.commit()
+        await self.session.refresh(link)
+
+        # Invalidate Redis Cache so redirect gets updated data
+        cache_key = f"link:{short_code}"
+        await redis_manager.delete(cache_key)
+
+        return link
 
     async def get_links_by_user_id(self, user_id: str) -> list[Link]:
         return await self.repo.get_filtered(user_id=user_id)

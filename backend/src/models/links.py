@@ -35,6 +35,16 @@ class LinkUpdate(SQLModel):
     original_url: HttpUrl | None = None
     is_active: bool | None = None
 
+    @field_validator("original_url", mode="before")
+    @classmethod
+    def ensure_scheme(cls, v: str | HttpUrl | None) -> str | HttpUrl | None:
+        if isinstance(v, str):
+            v = v.strip()
+            if v and not v.startswith(("http://", "https://")):
+                return f"https://{v}"
+        return v
+
+
 
 class Link(LinkBase, table=True):
     id: int | None = Field(default=None, primary_key=True)

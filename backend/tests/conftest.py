@@ -26,6 +26,7 @@ def mock_redis():
     with patch("src.services.links.redis_manager") as mock:
         mock.get = AsyncMock(return_value=None)
         mock.set = AsyncMock(return_value=True)
+        mock.delete = AsyncMock(return_value=True)
         yield mock
 
 

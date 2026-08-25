@@ -68,3 +68,29 @@ async def test_get_link_stats(authenticated_ac: AsyncClient):
     stats_response = await authenticated_ac.get(f"/api/v1/links/{short_code}/stats")
     assert stats_response.status_code == 200
     assert isinstance(stats_response.json(), list)
+
+
+async def test_update_link(authenticated_ac: AsyncClient):
+    create_response = await authenticated_ac.post(
+        "/api/v1/links/", json={"original_url": "https://old-url.com"}
+    )
+    assert create_response.status_code == 201
+    short_code = create_response.json()["short_code"]
+
+    # Update original_url and is_active
+    update_response = await authenticated_ac.patch(
+        f"/api/v1/links/{short_code}",
+        json={"original_url": "new-url.com", "is_active": False},
+    )
+    assert update_response.status_code == 200
+    data = update_response.json()
+    assert data["original_url"] == "https://new-url.com/"
+    assert data["is_active"] is False
+
+
+async def test_update_link_not_found(authenticated_ac: AsyncClient):
+    response = await authenticated_ac.patch(
+        "/api/v1/links/nonexistent", json={"is_active": False}
+    )
+    assert response.status_code == 404
+
