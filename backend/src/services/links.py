@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
+from loguru import logger
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.shortener import generate_short_code
@@ -25,9 +26,13 @@ class LinkService:
 
         await self.session.commit()
         await self.session.refresh(_link_data)
+        logger.bind(short_code=_link_data.short_code, user_id=str(user_id)).info(
+            "Short link created"
+        )
+
         return _link_data
 
-    async def update_link(self, id: int, user_id: uuid.UUID | str, state: bool) -> Link:
+    async def update_link_state(self, id: int, user_id: uuid.UUID | str, state: bool) -> Link:
         link = await self.repo.get_one_or_none(id=id)
         if not link or str(link.user_id) != str(user_id):
             raise HTTPException(status_code=404, detail="Link not found")
@@ -35,6 +40,8 @@ class LinkService:
         await self.session.commit()
         await self.session.refresh(link)
         await redis_manager.delete(f"link:{link.short_code}")
+        logger.bind(link_id=id, is_active=state).info("Link status updated")
+
         return link
 
 
@@ -46,12 +53,15 @@ class LinkService:
 
         cached_data = await redis_manager.get(cache_key)
         if cached_data:
-            return Link.model_validate_json(cached_data)
+            logger.bind(short_code=short_code).debug("Redis cache HIT")
 
+            return Link.model_validate_json(cached_data)
+        
         link = await self.repo.get_by_short_code(short_code)
         if link and link.is_active:
             await redis_manager.set(cache_key, link.model_dump_json(), expire=3600)
             return link
+        logger.bind(short_code=short_code).info("Redis cache MISS, querying database")
 
         return None
 

@@ -1,6 +1,7 @@
 from fastapi import HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRouter
+from loguru import logger
 
 from src.api.deps import LinkServiceDep, UserIdDep
 from src.init import rabbit_manager
@@ -42,7 +43,7 @@ async def get_link_stats(
 async def update_link(
     id: int, user_id: UserIdDep, link_service: LinkServiceDep, state: bool
 ) -> LinkPublic:
-    return await link_service.update_link(id, user_id, state)
+    return await link_service.update_link_state(id, user_id, state)
 
 
 @redirect_router.get("/{short_code}")
@@ -60,4 +61,5 @@ async def redirect_to_url(short_code: str, service: LinkServiceDep, request: Req
             or request.headers.get("x-country-code"),
         },
     )
+    logger.bind(short_code=short_code, target=str(link.original_url)).info("Redirecting client")
     return RedirectResponse(url=str(link.original_url))

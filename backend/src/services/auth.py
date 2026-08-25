@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from loguru import logger
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.security import (
@@ -28,15 +29,25 @@ class AuthService:
         )
         user: User = await self.repo.add(db_user)
         await self.session.commit()
+        logger.bind(user_id=str(user.id), email=user.email).info(
+            "User registered successfully"
+        )
+
         return user
 
     async def login_user(self, data: UserCreate) -> tuple[str, str]:
         user = await self.repo.get_user_with_hash_password(email=data.email)
         if not user or not verify_password(data.password, user.hashed_password):
+            logger.bind(email=data.email).warning(
+                "Failed login attempt: invalid credentials"
+            )
+
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         access_token = create_access_token(data={"sub": str(user.id)})
         refresh_token = create_refresh_token(data={"sub": str(user.id)})
+        logger.bind(user_id=str(user.id)).info("User logged in")
+
         return access_token, refresh_token
 
     async def get_user_by_id(self, user_id: str) -> User:
@@ -67,5 +78,6 @@ class AuthService:
 
         new_access_token = create_access_token(data={"sub": str(user.id)})
         new_refresh_token = create_refresh_token(data={"sub": str(user.id)})
+        logger.bind(user_id=str(user_id)).info("Tokens refreshed")
 
         return new_access_token, new_refresh_token

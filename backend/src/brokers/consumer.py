@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Final
 
 import aio_pika
+from loguru import logger
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -55,6 +56,8 @@ class ClickConsumer:
                 )
                 session.add(click)
                 await session.commit()
+        logger.bind(link_id=event_data.get("link_id"), browser=browser).info("Click event processed and saved to DB")
+
 
 async def main():
     consumer = ClickConsumer(
