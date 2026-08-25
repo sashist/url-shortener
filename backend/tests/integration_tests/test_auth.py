@@ -57,6 +57,13 @@ async def test_get_me_unauthenticated(ac: AsyncClient):
     assert response.status_code == 401
 
 
+async def test_logout(authenticated_ac: AsyncClient):
+    response = await authenticated_ac.post("/api/v1/auth/logout")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Logged out successfully"}
+
+
+
 def test_decode_and_encode_access_token():
     data = {"user_id": 1}
     jwt_token = create_access_token(data)
