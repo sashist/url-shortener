@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -25,26 +27,16 @@ class LinkService:
         await self.session.refresh(_link_data)
         return _link_data
 
-    async def update_link(
-        self, short_code: str, link_update: LinkUpdate, user_id: int
-    ) -> Link:
-        link = await self.repo.get_by_short_code(short_code)
+    async def update_link(self, id: int, user_id: uuid.UUID | str, state: bool) -> Link:
+        link = await self.repo.get_one_or_none(id=id)
         if not link or str(link.user_id) != str(user_id):
             raise HTTPException(status_code=404, detail="Link not found")
-
-        update_dict = link_update.model_dump(exclude_unset=True)
-        if "original_url" in update_dict and update_dict["original_url"] is not None:
-            update_dict["original_url"] = str(update_dict["original_url"])
-
-        link.sqlmodel_update(update_dict)
+        link.is_active = state
         await self.session.commit()
         await self.session.refresh(link)
-
-        # Invalidate Redis Cache so redirect gets updated data
-        cache_key = f"link:{short_code}"
-        await redis_manager.delete(cache_key)
-
+        await redis_manager.delete(f"link:{link.short_code}")
         return link
+
 
     async def get_links_by_user_id(self, user_id: str) -> list[Link]:
         return await self.repo.get_filtered(user_id=user_id)

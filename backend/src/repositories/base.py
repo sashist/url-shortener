@@ -1,7 +1,9 @@
 import uuid
 from collections.abc import Sequence
+from typing import Any
 
 from pydantic import BaseModel
+
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -21,9 +23,15 @@ class BaseRepository[ModelType: SQLModel]:
     async def add_bulk(self, db_objs: Sequence[ModelType]) -> list[ModelType]:
         self.session.add_all(db_objs)
         await self.session.flush()
+        return list(db_objs)
 
-    async def get_one(self, id: uuid.UUID) -> ModelType | None:
+    async def get_one(self, id: uuid.UUID | int) -> ModelType | None:
         return await self.session.get(self.model, id)
+
+    async def get_one_or_none(self, **kwargs) -> ModelType | None:
+        statement = select(self.model).filter_by(**kwargs)
+        result = await self.session.exec(statement)
+        return result.one_or_none()
 
     async def get_all(self) -> list[ModelType]:
         return await self.get_filtered()

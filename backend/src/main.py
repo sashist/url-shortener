@@ -5,6 +5,9 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+sys.path.append(str(Path(__file__).parent.parent))
+
 from src.api.links import redirect_router
 from src.api.router import api_router
 from src.init import rabbit_manager, redis_manager

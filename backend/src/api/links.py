@@ -39,14 +39,11 @@ async def get_link_stats(
     return await link_service.get_link_stats(short_code, user_id)
 
 
-@router.patch("/{short_code}", response_model=LinkPublic, tags=["links"])
+@router.patch("/{id}", response_model=LinkPublic, tags=["links"])
 async def update_link(
-    short_code: str,
-    link_update: LinkUpdate,
-    user_id: UserIdDep,
-    link_service: LinkServiceDep,
+    id: int, user_id: UserIdDep, link_service: LinkServiceDep, state: bool
 ) -> LinkPublic:
-    return await link_service.update_link(short_code, link_update, user_id)
+    return await link_service.update_link(id, user_id, state)
 
 
 @redirect_router.get("/{short_code}")
@@ -60,7 +57,8 @@ async def redirect_to_url(short_code: str, service: LinkServiceDep, request: Req
         payload={
             "link_id": link.id,
             "browser": request.headers.get("user-agent"),
-            "country": request.headers.get("cf-ipcountry") or request.headers.get("x-country-code"),
+            "country": request.headers.get("cf-ipcountry")
+            or request.headers.get("x-country-code"),
         },
     )
     return RedirectResponse(url=str(link.original_url))

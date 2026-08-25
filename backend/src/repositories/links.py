@@ -11,4 +11,3 @@ class LinkRepository(BaseRepository[Link]):
         stmt = select(self.model).where(Link.short_code == short_code)
         result = await self.session.exec(stmt)
         return result.one_or_none()
-
