@@ -307,22 +307,56 @@
     const modalBrowserBarsList = document.getElementById("modal-browser-bars-list");
     const modalActivityLogBody = document.getElementById("modal-activity-log-body");
 
-    // Token Utilities
+    // Token Utilities & Silent Refresh
     function getToken() { return localStorage.getItem("token"); }
     function setToken(token) { localStorage.setItem("token", token); }
     function clearToken() { localStorage.removeItem("token"); }
 
+    async function refreshToken() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+          method: "POST",
+          credentials: "include"
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setToken(data.access_token);
+          return data.access_token;
+        }
+      } catch (err) {}
+      return null;
+    }
+
+    async function apiFetch(url, options = {}) {
+      options.headers = options.headers || {};
+      options.credentials = "include";
+      let token = getToken();
+      if (token) {
+        options.headers["Authorization"] = `Bearer ${token}`;
+      }
+      let res = await fetch(url, options);
+      if (res.status === 401) {
+        const newToken = await refreshToken();
+        if (newToken) {
+          options.headers["Authorization"] = `Bearer ${newToken}`;
+          res = await fetch(url, options);
+        }
+      }
+      return res;
+    }
+
     // Init & Auth Check
     async function init() {
-      const token = getToken();
+      let token = getToken();
+      if (!token) {
+        token = await refreshToken();
+      }
       if (!token) {
         showAuth();
         return;
       }
       try {
-        const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+        const res = await apiFetch(`${API_BASE}/api/v1/auth/me`);
         if (res.ok) {
           const user = await res.json();
           showDashboard(user.email);
@@ -335,6 +369,7 @@
         showAuth();
       }
     }
+
 
     function showAuth() {
       viewAuth.classList.remove("hidden");
@@ -384,6 +419,7 @@
         const res = await fetch(`${API_BASE}${endpoint}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ email, password })
         });
 
@@ -398,6 +434,7 @@
           const loginRes = await fetch(`${API_BASE}/api/v1/auth/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({ email, password })
           });
           const loginData = await loginRes.json();
@@ -430,15 +467,11 @@
     formShorten.addEventListener("submit", async (e) => {
       e.preventDefault();
       const originalUrl = inputUrl.value.trim();
-      const token = getToken();
 
       try {
-        const res = await fetch(`${API_BASE}/api/v1/links/`, {
+        const res = await apiFetch(`${API_BASE}/api/v1/links/`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ original_url: originalUrl })
         });
 
@@ -466,11 +499,8 @@
 
     // Load Links
     async function loadLinks() {
-      const token = getToken();
       try {
-        const res = await fetch(`${API_BASE}/api/v1/links/`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+        const res = await apiFetch(`${API_BASE}/api/v1/links/`);
         if (res.ok) {
           const links = await res.json();
           renderLinks(links);
@@ -548,13 +578,11 @@
     }
 
     window.toggleLinkStatus = async function(linkId, currentStatus, btn) {
-      const token = getToken();
       const newStatus = !currentStatus;
       btn.disabled = true;
       try {
-        const res = await fetch(`${API_BASE}/api/v1/links/${linkId}?state=${newStatus}`, {
-          method: "PATCH",
-          headers: { "Authorization": `Bearer ${token}` }
+        const res = await apiFetch(`${API_BASE}/api/v1/links/${linkId}?state=${newStatus}`, {
+          method: "PATCH"
         });
         if (res.ok) {
           loadLinks();
@@ -579,7 +607,6 @@
 
     // Analytics Modal
     window.openStatsModal = async function(shortCode, originalUrlEncoded) {
-      const token = getToken();
       modalShortcodeBadge.textContent = shortCode;
       modalTargetUrlText.textContent = decodeURIComponent(originalUrlEncoded);
       metricTotalClicks.textContent = "...";
@@ -591,9 +618,7 @@
       modalAnalytics.classList.add("flex");
 
       try {
-        const res = await fetch(`${API_BASE}/api/v1/links/${shortCode}/stats`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
+        const res = await apiFetch(`${API_BASE}/api/v1/links/${shortCode}/stats`);
 
         if (res.ok) {
           const clicks = await res.json();
@@ -649,6 +674,7 @@
         modalActivityLogBody.innerHTML = `<tr><td colspan="3" class="px-3 py-4 text-center text-red-500 font-mono">Failed to fetch stats</td></tr>`;
       }
     };
+
 
     modalCloseBtn.addEventListener("click", () => {
       modalAnalytics.classList.add("hidden");

@@ -34,7 +34,9 @@ async def test_get_user_links(authenticated_ac: AsyncClient):
     response = await authenticated_ac.get("/api/v1/links/")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
-    assert response.json()[0]["original_url"] == "https://example.com/"
+    urls = [link["original_url"] for link in response.json()]
+    assert "https://example.com/" in urls
+
 
 
 async def test_to_original_url(authenticated_ac: AsyncClient):

@@ -46,7 +46,8 @@ class LinkService:
 
 
     async def get_links_by_user_id(self, user_id: str) -> list[Link]:
-        return await self.repo.get_filtered(user_id=user_id)
+        return await self.repo.get_user_links(user_id=user_id)
+
 
     async def get_by_short_code(self, short_code: str) -> Link | None:
         cache_key = f"link:{short_code}"

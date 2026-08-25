@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlmodel import select
 
 from src.models import Link
@@ -11,3 +13,9 @@ class LinkRepository(BaseRepository[Link]):
         stmt = select(self.model).where(Link.short_code == short_code)
         result = await self.session.exec(stmt)
         return result.one_or_none()
+
+    async def get_user_links(self, user_id: Any) -> list[Link]:
+        stmt = select(self.model).where(Link.user_id == user_id).order_by(Link.id.desc())
+        result = await self.session.exec(stmt)
+        return list(result.all())
+

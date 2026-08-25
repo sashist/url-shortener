@@ -6,13 +6,16 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from loguru import logger
 
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.api.links import redirect_router
 from src.api.router import api_router
+from src.core.logging import logger, setup_logging
 from src.init import rabbit_manager, redis_manager
+
+setup_logging()
+
 
 
 @asynccontextmanager
