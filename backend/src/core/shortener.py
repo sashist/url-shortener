@@ -1,4 +1,3 @@
-import sqids
 from sqids import Sqids
 
 SQ_ALPAHABET = "k3G7QAe51FCsPW92uEOyq4Bg6Sp8YzVTmnU0liwDdHXLajZrfxNhobJIRcMvKt"

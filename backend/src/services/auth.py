@@ -1,5 +1,4 @@
 from fastapi import HTTPException
-from pydantic import EmailStr
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.security import (

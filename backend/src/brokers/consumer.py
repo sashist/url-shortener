@@ -10,12 +10,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
+from user_agents import parse
+
 from src.core.config import settings
 from src.core.database import async_session_maker
 from src.models.clicks import ClickLog
-
-
-from user_agents import parse
 
 
 class ClickConsumer:

@@ -5,7 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.core.shortener import generate_short_code
 from src.init import redis_manager
-from src.models import Link, LinkCreate, LinkUpdate
+from src.models import Link, LinkCreate
 from src.repositories.clicks import ClickRepository
 from src.repositories.links import LinkRepository
 

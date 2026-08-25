@@ -46,7 +46,7 @@ def postgres_container(check_test_mode) -> PostgresContainer:
 @pytest_asyncio.fixture(scope="session")
 async def db_engine(
     postgres_container: PostgresContainer,
-) -> AsyncGenerator[AsyncEngine, None]:
+) -> AsyncGenerator[AsyncEngine]:
     async_url = postgres_container.get_connection_url(driver="asyncpg")
     engine = create_async_engine(async_url, echo=False, poolclass=NullPool)
 
@@ -66,12 +66,12 @@ async def db_engine(
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_database(
     db_engine: AsyncEngine,
-) -> AsyncGenerator[None, None]:
+) -> AsyncGenerator[None]:
     session_factory = async_sessionmaker(
         db_engine, class_=AsyncSession, expire_on_commit=False
     )
 
-    async def _override_get_db() -> AsyncGenerator[AsyncSession, None]:
+    async def _override_get_db() -> AsyncGenerator[AsyncSession]:
         async with session_factory() as session:
             yield session
 
@@ -81,7 +81,7 @@ async def setup_database(
 
 
 @pytest_asyncio.fixture(scope="session")
-async def ac(setup_database) -> AsyncGenerator[AsyncClient, None]:
+async def ac(setup_database) -> AsyncGenerator[AsyncClient]:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
@@ -96,7 +96,7 @@ async def register_user(ac: AsyncClient, setup_database):
 
 
 @pytest_asyncio.fixture(scope="session")
-async def authenticated_ac(register_user, setup_database) -> AsyncGenerator[AsyncClient, None]:
+async def authenticated_ac(register_user, setup_database) -> AsyncGenerator[AsyncClient]:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:

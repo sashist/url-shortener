@@ -4,8 +4,7 @@ from fastapi.routing import APIRouter
 
 from src.api.deps import LinkServiceDep, UserIdDep
 from src.init import rabbit_manager
-from src.models import ClickLogPublic, LinkCreate, LinkPublic, LinkUpdate
-
+from src.models import ClickLogPublic, LinkCreate, LinkPublic
 
 router = APIRouter(
     prefix="/links",

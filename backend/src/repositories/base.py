@@ -1,9 +1,7 @@
 import uuid
 from collections.abc import Sequence
-from typing import Any
 
 from pydantic import BaseModel
-
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 

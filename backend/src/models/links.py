@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from pydantic import HttpUrl, field_validator
-from sqlmodel import AutoString, DateTime, Field, SQLModel
+from sqlmodel import DateTime, Field, SQLModel
 
 from src.utils import get_datetime_utc
 

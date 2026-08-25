@@ -7,11 +7,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.services.links import LinkService
 from src.core.database import async_session_maker
 from src.core.security import decode_token
 from src.models.auth import TokenPayload
 from src.services.auth import AuthService
+from src.services.links import LinkService
 
 http_bearer = HTTPBearer()
 
@@ -32,8 +32,9 @@ def get_service[T](service_cls: type[T]) -> Callable[[SessionDep], T]:
 
 
 def get_current_user_id(
-    credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(http_bearer)],
 ) -> uuid.UUID:
+
     token = credentials.credentials
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
